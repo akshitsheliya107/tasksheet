@@ -1,21 +1,19 @@
 import { useState, useEffect } from "react";
 import { Toaster } from "react-hot-toast";
 import { ConfigProvider } from "antd";
-import Sidebar from "./components/Sidebar";
+
 import Dashboard from "./components/Dashboard";
-import HistoryView from "./components/HistoryView";
-import SettingsView from "./components/SettingsView";
+
 import LoadingSpinner from "./components/LoadingSpinner";
 import {
   useTasks,
   useDiscussion,
   useTesting,
-  useOptions,
   useSnapshots,
 } from "./hooks/useSupabase";
+import { TYPE_OPTIONS, STATUS_OPTIONS, BUG_TYPE_OPTIONS } from "./data";
 
 function App() {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeView, setActiveView] = useState("dashboard");
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem("app-theme") || "emerald";
@@ -50,26 +48,9 @@ function App() {
     deleteBug,
   } = useTesting();
 
-  const {
-    typeOptions,
-    statusOptions,
-    bugTypeOptions,
-    loading: optionsLoading,
-    addTypeOption,
-    updateTypeOption,
-    deleteTypeOption,
-    addStatusOption,
-    updateStatusOption,
-    deleteStatusOption,
-    addBugTypeOption,
-    updateBugTypeOption,
-    deleteBugTypeOption,
-  } = useOptions();
-
   const { saveSnapshot } = useSnapshots();
 
-  const isLoading =
-    tasksLoading || discussionLoading || testingLoading || optionsLoading;
+  const isLoading = tasksLoading || discussionLoading || testingLoading;
 
   const antdTheme = {
     token: {
@@ -104,19 +85,15 @@ function App() {
 
   const renderView = () => {
     switch (activeView) {
-      case "history":
-        return <HistoryView theme={theme} />;
-      case "settings":
-        return <SettingsView theme={theme} onThemeChange={setTheme} />;
       default:
         return (
           <Dashboard
             tasks={tasks}
             discussion={discussion}
             testing={testing}
-            typeOptions={typeOptions}
-            statusOptions={statusOptions}
-            bugTypeOptions={bugTypeOptions}
+            typeOptions={TYPE_OPTIONS}
+            statusOptions={STATUS_OPTIONS}
+            bugTypeOptions={BUG_TYPE_OPTIONS}
             onCreateTask={createTask}
             onCreateDefaultTasks={createDefaultTasks}
             onUpdateTask={updateTask}
@@ -126,15 +103,6 @@ function App() {
             onAddBug={addBug}
             onUpdateBug={updateBug}
             onDeleteBug={deleteBug}
-            onAddTypeOption={addTypeOption}
-            onUpdateTypeOption={updateTypeOption}
-            onDeleteTypeOption={deleteTypeOption}
-            onAddStatusOption={addStatusOption}
-            onUpdateStatusOption={updateStatusOption}
-            onDeleteStatusOption={deleteStatusOption}
-            onAddBugTypeOption={addBugTypeOption}
-            onUpdateBugTypeOption={updateBugTypeOption}
-            onDeleteBugTypeOption={deleteBugTypeOption}
             onRefresh={fetchTasks}
             onSaveSnapshot={saveSnapshot}
             theme={theme}
@@ -174,20 +142,7 @@ function App() {
           }}
         />
 
-        <Sidebar
-          isOpen={sidebarOpen}
-          onToggle={() => setSidebarOpen(!sidebarOpen)}
-          activeView={activeView}
-          onViewChange={setActiveView}
-          theme={theme}
-          onThemeChange={setTheme}
-        />
-
-        <main
-          className={`transition-all duration-300 min-h-screen ${
-            sidebarOpen ? "ml-60" : "ml-16"
-          }`}
-        >
+        <main>
           <div className="p-6">{renderView()}</div>
         </main>
       </div>

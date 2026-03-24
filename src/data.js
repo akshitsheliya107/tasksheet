@@ -73,6 +73,23 @@ export const initialDiscussion = {
   note: "General discussion / meetings / calls",
 };
 
+// Static options for dropdowns
+export const TYPE_OPTIONS = [
+  "Internal Bug",
+  "Valid Bugs",
+  "Feature Request",
+  "Enhancement",
+];
+
+export const STATUS_OPTIONS = ["Not started", "In progress", "Done", "Blocked"];
+
+export const BUG_TYPE_OPTIONS = [
+  "Functionality",
+  "UI",
+  "Performance",
+  "Security",
+];
+
 export const initialTesting = {
   testingTime: { hrs: 1, min: 0 },
   testingModule: "Global",

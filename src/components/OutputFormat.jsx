@@ -16,18 +16,42 @@ export default function OutputFormat({ tasks, testing, discussion }) {
     return lines.length > 1 ? lines.slice(1).join("\n").trim() : task;
   };
 
+  const formatMinutes = (min) => {
+    if (!min || min <= 0) return "0 minute";
+    const h = Math.floor(min / 60);
+    const m = min % 60;
+    if (h > 0 && m > 0) return `${h}h ${m} minute`;
+    if (h > 0) return `${h}h`;
+    return `${m} minute`;
+  };
+
   const generateTasksOutput = () => {
-    return tasks
-      .filter((t) => t.task && t.finalTime > 0)
-      .map((t) => {
-        const cuLink = extractCULink(t.task);
-        const title = extractTitle(t.task);
-        const taskType = t.type || "Task";
-        return `${taskType}: ${cuLink} -> ${t.status || "In progress"} - ${
-          t.finalTime
-        }\n${title}`;
-      })
-      .join("\n\n");
+    const filtered = tasks.filter((t) => t.task && t.finalTime > 0);
+    const lines = filtered.map((t, idx) => {
+      const cuLink = t.cuLink || "";
+      const status = t.status || "in progress";
+      const desc = extractTitle(t.task);
+      const min = t.totalMin || 0;
+      const hr = t.finalTime || 0;
+      // Format: 1 . <cuLink>  >>> <status> >> <min> >> <hr>\n=> <desc>
+      return `${idx + 1} . ${cuLink}  >>> ${status} >> ${min}m >> ${hr}\n\n=> ${desc}`;
+    });
+
+    // Total valid/invalid bug time
+    const validMin = tasks
+      .filter((t) => t.isValid === true)
+      .reduce((sum, t) => sum + (t.totalMin || 0), 0);
+    const invalidMin = tasks
+      .filter((t) => t.isValid === false)
+      .reduce((sum, t) => sum + (t.totalMin || 0), 0);
+
+    lines.push("");
+    lines.push(`Total time spent for valid bugs- ${formatMinutes(validMin)}`);
+    lines.push(
+      `Total time spent for invalid bugs -  ${formatMinutes(invalidMin)}`
+    );
+
+    return lines.join("\n\n");
   };
 
   const generateTestingOutput = () => {

@@ -12,6 +12,7 @@ export default function TimeEntryRow({
   typeOptions = [],
   statusOptions = [],
   bugTypeOptions = [],
+  cuLink = "",
 }) {
   const [localEntry, setLocalEntry] = useState(entry);
 
@@ -75,6 +76,32 @@ export default function TimeEntryRow({
       </td>
 
       <td className="px-3 py-3 border-r border-gray-200">
+        {readOnly ? (
+          localEntry.cuLink ? (
+            <a
+              href={localEntry.cuLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 underline text-xs break-all"
+            >
+              {localEntry.cuLink}
+            </a>
+          ) : (
+            <span className="text-xs text-gray-400">-</span>
+          )
+        ) : (
+          <input
+            type="text"
+            value={localEntry.cuLink || ""}
+            onChange={(e) => handleChange("cuLink", e.target.value)}
+            className="w-full px-2 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white transition-all duration-200"
+            placeholder="Paste CU Link..."
+            disabled={readOnly}
+          />
+        )}
+      </td>
+
+      <td className="px-3 py-3 border-r border-gray-200">
         <textarea
           value={localEntry.task || ""}
           onChange={(e) => handleChange("task", e.target.value)}
@@ -135,8 +162,8 @@ export default function TimeEntryRow({
             optionFilterProp="children"
           >
             {typeOptions.map((option) => (
-              <Select.Option key={option.id} value={option.name}>
-                {option.name}
+              <Select.Option key={option} value={option}>
+                {option}
               </Select.Option>
             ))}
           </Select>
@@ -160,8 +187,8 @@ export default function TimeEntryRow({
             optionFilterProp="children"
           >
             {statusOptions.map((option) => (
-              <Select.Option key={option.id} value={option.name}>
-                {option.name}
+              <Select.Option key={option} value={option}>
+                {option}
               </Select.Option>
             ))}
           </Select>
@@ -185,8 +212,8 @@ export default function TimeEntryRow({
             optionFilterProp="children"
           >
             {bugTypeOptions.map((option) => (
-              <Select.Option key={option.id} value={option.name}>
-                {option.name}
+              <Select.Option key={option} value={option}>
+                {option}
               </Select.Option>
             ))}
           </Select>

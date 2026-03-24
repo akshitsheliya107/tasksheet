@@ -33,15 +33,6 @@ export default function Dashboard({
   onAddBug,
   onUpdateBug,
   onDeleteBug,
-  onAddTypeOption,
-  onUpdateTypeOption,
-  onDeleteTypeOption,
-  onAddStatusOption,
-  onUpdateStatusOption,
-  onDeleteStatusOption,
-  onAddBugTypeOption,
-  onUpdateBugTypeOption,
-  onDeleteBugTypeOption,
   onRefresh,
   onSaveSnapshot,
   theme = "emerald",
@@ -239,6 +230,9 @@ export default function Dashboard({
                 <th className="px-4 py-4 text-left text-xs font-bold text-white uppercase tracking-wider border-r border-emerald-600 w-[100px]">
                   Date
                 </th>
+                <th className="px-4 py-4 text-left text-xs font-bold text-white uppercase tracking-wider border-r border-emerald-600 w-[160px]">
+                  CU Link
+                </th>
                 <th className="px-4 py-4 text-left text-xs font-bold text-white uppercase tracking-wider border-r border-emerald-600 min-w-[300px]">
                   Task / Activity
                 </th>
@@ -285,15 +279,7 @@ export default function Dashboard({
                   typeOptions={typeOptions}
                   statusOptions={statusOptions}
                   bugTypeOptions={bugTypeOptions}
-                  onAddTypeOption={onAddTypeOption}
-                  onUpdateTypeOption={onUpdateTypeOption}
-                  onDeleteTypeOption={onDeleteTypeOption}
-                  onAddStatusOption={onAddStatusOption}
-                  onUpdateStatusOption={onUpdateStatusOption}
-                  onDeleteStatusOption={onDeleteStatusOption}
-                  onAddBugTypeOption={onAddBugTypeOption}
-                  onUpdateBugTypeOption={onUpdateBugTypeOption}
-                  onDeleteBugTypeOption={onDeleteBugTypeOption}
+                  cuLink={entry.cuLink}
                 />
               ))}
 
