@@ -75,19 +75,45 @@ export const initialDiscussion = {
 
 // Static options for dropdowns
 export const TYPE_OPTIONS = [
-  "Internal Bug",
-  "Valid Bugs",
-  "Feature Request",
-  "Enhancement",
+  "module testing",
+  "helping and call",
+  "valid bugs",
+  "invalid/dev. reply bugs",
+  "live bug",
+  "internal bug",
+  "redesign/revision count",
+  "other",
+  "qa replied",
+  "internal valid bug",
+  "mr review",
+  "internal invalid/dev. reply bugs",
 ];
 
-export const STATUS_OPTIONS = ["Not started", "In progress", "Done", "Blocked"];
+// export const STATUS_OPTIONS = ["Not started", "In progress", "Done", "Blocked"];
+export const STATUS_OPTIONS = [
+  "  Not started",
+  "In progress",
+  "MR",
+  "Done",
+  "On Hold",
+  "Dev Replayed",
+  "Debug and transfer",
+  "Done On Beta",
+  "Done On Dev",
+  "Transfer To Leader",
+  "not replicate",
+];
 
 export const BUG_TYPE_OPTIONS = [
   "Functionality",
-  "UI",
-  "Performance",
-  "Security",
+  "Revision",
+  "Invalid",
+  "Duplicate",
+  "New Future",
+  "No Changes Needed",
+  "Native Behavior",
+  "Unable to replicate",
+  "Transfer",
 ];
 
 export const initialTesting = {

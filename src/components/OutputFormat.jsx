@@ -26,15 +26,44 @@ export default function OutputFormat({ tasks, testing, discussion }) {
   };
 
   const generateTasksOutput = () => {
-    const filtered = tasks.filter((t) => t.task && t.finalTime > 0);
-    const lines = filtered.map((t, idx) => {
-      const cuLink = t.cuLink || "";
-      const status = t.status || "in progress";
-      const desc = extractTitle(t.task);
-      const min = t.totalMin || 0;
-      const hr = t.finalTime || 0;
-      // Format: 1 . <cuLink>  >>> <status> >> <min> >> <hr>\n=> <desc>
-      return `${idx + 1} . ${cuLink}  >>> ${status} >> ${min}m >> ${hr}\n\n=> ${desc}`;
+    // Add revision entry as first
+    const revisionEntry =
+      "1 .  [Revision]  >> link  >>>   Not started >> 60m >> 1\n\n=> test data";
+
+    // Group tasks by type
+    const typeMap = {};
+    tasks.forEach((t) => {
+      if (!t.type) return;
+      if (!typeMap[t.type]) typeMap[t.type] = [];
+      typeMap[t.type].push(t);
+    });
+
+    // Sort types: selected type first (if any), then others
+    const typeOrder = Object.keys(typeMap);
+    // If you want a specific type first, set it here:
+    const selectedType = typeOrder[0]; // or set to a specific type string
+    const sortedTypes = selectedType
+      ? [selectedType, ...typeOrder.filter((t) => t !== selectedType)]
+      : typeOrder;
+
+    let output = "";
+    let typeIdx = 1;
+    sortedTypes.forEach((type) => {
+      const arr = typeMap[type];
+      const totalCount = arr.length;
+      const totalHr = arr.reduce(
+        (sum, t) => sum + (parseFloat(t.finalTime) || 0),
+        0
+      );
+      output += `[${type} Count] [${totalCount}] >>> ${totalHr}\n\n`;
+      arr.forEach((t, idx) => {
+        const cuLink = t.cuLink || "";
+        const status = t.status || "in progress";
+        const min = t.totalMin || 0;
+        const hr = t.finalTime || 0;
+        const desc = extractTitle(t.task);
+        output += ` ${typeIdx++} .  [${type}] >>${cuLink ? cuLink + "  " : ""}>>>   ${status} >> ${min}m >> ${hr}\n\n=> ${desc}\n\n`;
+      });
     });
 
     // Total valid/invalid bug time
@@ -45,13 +74,10 @@ export default function OutputFormat({ tasks, testing, discussion }) {
       .filter((t) => t.isValid === false)
       .reduce((sum, t) => sum + (t.totalMin || 0), 0);
 
-    lines.push("");
-    lines.push(`Total time spent for valid bugs- ${formatMinutes(validMin)}`);
-    lines.push(
-      `Total time spent for invalid bugs -  ${formatMinutes(invalidMin)}`
-    );
+    output += `Total time spent for valid bugs- ${formatMinutes(validMin)}\n`;
+    output += `Total time spent for invalid bugs -  ${formatMinutes(invalidMin)}`;
 
-    return lines.join("\n\n");
+    return output;
   };
 
   const generateTestingOutput = () => {
