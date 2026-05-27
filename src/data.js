@@ -73,8 +73,10 @@ export const initialDiscussion = {
   note: "General discussion / meetings / calls",
 };
 
-// Static options for dropdowns
+// ✅ ADDED "Panel Bugs" and "NF"
 export const TYPE_OPTIONS = [
+  "Panel Bugs",
+  "NF",
   "module testing",
   "helping and call",
   "valid bugs",
@@ -89,9 +91,8 @@ export const TYPE_OPTIONS = [
   "internal invalid/dev. reply bugs",
 ];
 
-// export const STATUS_OPTIONS = ["Not started", "In progress", "Done", "Blocked"];
 export const STATUS_OPTIONS = [
-  "  Not started",
+  "Not started",
   "In progress",
   "MR",
   "Done",
@@ -137,7 +138,10 @@ export const initialTesting = {
   ],
 };
 
+// ✅ ADDED "Panel Bugs" and "NF"
 export const initialTypeOptions = [
+  "Panel Bugs",
+  "NF",
   "Mr Review",
   "Module Testing",
   "Helping and Call",
