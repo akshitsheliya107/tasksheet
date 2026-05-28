@@ -42,14 +42,19 @@ export default function Dashboard({
   const [saving, setSaving] = useState(false);
   const [initialized, setInitialized] = useState(false);
 
-  useEffect(() => {
-    if (!initialized && tasks.length === 0) {
-      onCreateDefaultTasks(4);
-      setInitialized(true);
-    } else if (tasks.length > 0) {
-      setInitialized(true);
+useEffect(() => {
+  if (!initialized) {
+    if (tasks.length === 0) {
+      // ✅ Check karo localStorage me already tasks hain kya
+      const savedTasks = JSON.parse(localStorage.getItem("tasks") || "[]");
+      if (savedTasks.length === 0) {
+        // Sirf tabhi create karo jab sach me koi task nahi hai
+        onCreateDefaultTasks(4);
+      }
     }
-  }, [tasks.length, initialized, onCreateDefaultTasks]);
+    setInitialized(true);
+  }
+}, [initialized, tasks.length, onCreateDefaultTasks]);
 
   const tasksStats = useMemo(() => {
     return tasks.reduce(

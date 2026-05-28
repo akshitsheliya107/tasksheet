@@ -14,21 +14,24 @@ export function useTasks() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const transformTask = (task) => ({
-    id: task.id,
-    date: task.date,
-    task: task.task,
-    hrs: task.hrs,
-    min: task.min,
-    totalMin: task.total_min,
-    finalTime: task.final_time,
-    type: task.type,
-    status: task.status,
-    bugType: task.bug_type,
-    isValid: task.is_valid,
-    validTime: task.valid_time,
-    invalidTime: task.invalid_time,
-  });
+ // ✅ FIXED transformTask - cuLink, isValid sab properly map ho
+const transformTask = (task) => ({
+  id: task.id,
+  date: task.date || "",
+  task: task.task || "",
+  hrs: task.hrs || 0,
+  min: task.min || 0,
+  // ✅ snake_case se camelCase - dono support karo
+  totalMin: task.total_min !== undefined ? task.total_min : task.totalMin || 0,
+  finalTime: task.final_time !== undefined ? task.final_time : task.finalTime || 0,
+  cuLink: task.cu_link !== undefined ? task.cu_link : task.cuLink || "",
+  type: task.type || "",
+  status: task.status || "",
+  bugType: task.bug_type !== undefined ? task.bug_type : task.bugType || "",
+  isValid: task.is_valid !== undefined ? task.is_valid : task.isValid !== undefined ? task.isValid : null,
+  validTime: task.valid_time !== undefined ? task.valid_time : task.validTime || 0,
+  invalidTime: task.invalid_time !== undefined ? task.invalid_time : task.invalidTime || 0,
+});
 
   const fetchTasks = useCallback(async () => {
     try {
