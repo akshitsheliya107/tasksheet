@@ -3,6 +3,8 @@ import { Toaster } from "react-hot-toast";
 import { ConfigProvider } from "antd";
 
 import Dashboard from "./components/Dashboard";
+import Sidebar from "./components/Sidebar";
+import History from "./components/History";
 
 import LoadingSpinner from "./components/LoadingSpinner";
 import {
@@ -15,6 +17,7 @@ import { TYPE_OPTIONS, STATUS_OPTIONS, BUG_TYPE_OPTIONS } from "./data";
 
 function App() {
   const [activeView, setActiveView] = useState("dashboard");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem("app-theme") || "emerald";
   });
@@ -48,7 +51,7 @@ function App() {
     deleteBug,
   } = useTesting();
 
-  const { saveSnapshot } = useSnapshots();
+  const { snapshots, deleteSnapshot, saveSnapshot } = useSnapshots();
 
   const isLoading = tasksLoading || discussionLoading || testingLoading;
 
@@ -85,6 +88,15 @@ function App() {
 
   const renderView = () => {
     switch (activeView) {
+      case "history":
+        return (
+          <History
+            snapshots={snapshots}
+            onDeleteSnapshot={deleteSnapshot}
+            onSaveSnapshot={saveSnapshot}
+          />
+        );
+      case "dashboard":
       default:
         return (
           <Dashboard
@@ -142,7 +154,14 @@ function App() {
           }}
         />
 
-        <main>
+        <Sidebar
+          isOpen={isSidebarOpen}
+          onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+          activeView={activeView}
+          onViewChange={setActiveView}
+        />
+
+        <main className={`transition-all duration-300 ${isSidebarOpen ? "ml-60" : "ml-16"}`}>
           <div className="p-6">{renderView()}</div>
         </main>
       </div>

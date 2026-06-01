@@ -1,208 +1,8 @@
-// import { Copy, Check, Download, FileText } from "lucide-react";
-// import { useState, useMemo } from "react";
-// import { message } from "antd";
-
-// export default function OutputFormat({ tasks, testing }) {
-//   const [copied, setCopied] = useState(false);
-
-//   const formatDecimalHours = (min) => {
-//     if (!min || min <= 0) return "0";
-//     return (min / 60).toFixed(2);
-//   };
-
-//   const formatMinutesDisplay = (min) => {
-//     if (!min || min <= 0) return "0m";
-//     const h = Math.floor(min / 60);
-//     const m = min % 60;
-//     if (h > 0 && m > 0) return `${h}h ${m}m`;
-//     if (h > 0) return `${h}h`;
-//     return `${m}m`;
-//   };
-
-//   const getCurrentDate = () => {
-//     const d = new Date();
-//     return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
-//   };
-
-//   const extractDescription = (task) => {
-//     if (!task) return "";
-//     const lines = task.split("\n");
-//     return lines.length > 1 ? lines.slice(1).join("\n").trim() : task;
-//   };
-
-//   // ✅ FIXED: Wrapped in useMemo to prevent expensive string rebuilding on every render
-//   const fullOutput = useMemo(() => {
-//     const generateTasksOutput = () => {
-//       const categoryMap = {
-//         "Panel Bugs": "Panel Bugs",
-//         "panel bugs": "Panel Bugs",
-//         "NF": "NF",
-//         "nf": "NF",
-//         "internal": "internal",
-//         "Internal": "internal",
-//       };
-
-//       const groups = {};
-//       const uncategorized = [];
-
-//       tasks.forEach((t) => {
-//         if (!t.type) {
-//           uncategorized.push(t);
-//           return;
-//         }
-//         const normalized = categoryMap[t.type] || t.type;
-//         if (!groups[normalized]) groups[normalized] = [];
-//         groups[normalized].push(t);
-//       });
-
-//       let output = "";
-//       let globalIdx = 1;
-
-//       const orderedCategories = ["Panel Bugs", "NF", "internal"];
-
-//       orderedCategories.forEach((cat) => {
-//         const arr = groups[cat];
-//         if (!arr || arr.length === 0) return;
-
-//         const headerPrefix = cat === "Panel Bugs" ? "" : "* ";
-//         const suffix = cat === "Panel Bugs" ? "" : " :";
-//         output += `${headerPrefix}[${cat}] [${arr.length}]${suffix}\n\n`;
-
-//         arr.forEach((t) => {
-//           const cuLink = t.cuLink || "";
-//           const status = t.status || "in progress";
-//           const minDisplay = formatMinutesDisplay(t.totalMin || 0);
-//           const hrDecimal = formatDecimalHours(t.finalTime || 0);
-//           const desc = extractDescription(t.task);
-
-//           output += `${globalIdx} . ${status} => ${cuLink} >> (${status}) >> ${minDisplay} >> ${hrDecimal}\n\n=> ${desc}\n\n`;
-//           globalIdx++;
-//         });
-//       });
-
-//       Object.entries(groups).forEach(([type, arr]) => {
-//         if (orderedCategories.includes(type)) return;
-//         if (!arr || arr.length === 0) return;
-
-//         output += `[${type}] [${arr.length}]\n\n`;
-//         arr.forEach((t) => {
-//           const cuLink = t.cuLink || "";
-//           const status = t.status || "in progress";
-//           const minDisplay = formatMinutesDisplay(t.totalMin || 0);
-//           const hrDecimal = formatDecimalHours(t.finalTime || 0);
-//           const desc = extractDescription(t.task);
-
-//           output += `${globalIdx} . ${status} => ${cuLink} >> (${status}) >> ${minDisplay} >> ${hrDecimal}\n\n=> ${desc}\n\n`;
-//           globalIdx++;
-//         });
-//       });
-
-//       return output.trim();
-//     };
-
-//     const generateTestingOutput = () => {
-//       let output = `------------------------------------------------------------------------\n\n`;
-//       output += `${testing.testingModule || "N/A"} -> testing on dev/beta >>> \n\n\n`;
-//       output += `**Testing Module => ${testing.testingModule || "N/A"}\n\n`;
-//       output += `and\n\n`;
-//       output += `**Test case scenario => ${testing.testCaseScenario || "N/A"}\n\n`;
-//       output += `and\n\n`;
-//       output += `**bug founded module : - ${testing.bugFoundedModule || "N/A"}\n\n`;
-//       output += `and\n\n`;
-
-//       if (testing.bugs && testing.bugs.length > 0) {
-//         testing.bugs.forEach((bug) => {
-//           if (bug.description) {
-//             output += `${bug.description}\n\nand\n\n`;
-//           }
-//         });
-//       }
-
-//       output += `Total Bug Count => ${testing.bugs?.length || 0}\n\n`;
-//       output += `[Created Bungs Url]`;
-
-//       if (testing.bugs && testing.bugs.length > 0) {
-//         testing.bugs.forEach((bug, index) => {
-//           if (bug.url) {
-//             output += `   ${index + 1} . ${bug.url}`;
-//             if (index < testing.bugs.length - 1) output += `\n`;
-//           }
-//         });
-//       }
-
-//       output += `\n\n------------------------------------------------------------------------`;
-//       return output;
-//     };
-
-//     return `DATE: ${getCurrentDate()}\n\n${generateTasksOutput()}\n\n${generateTestingOutput()}`;
-//   }, [tasks, testing]);
-
-//   const handleCopy = () => {
-//     navigator.clipboard.writeText(fullOutput);
-//     setCopied(true);
-//     message.success("Copied to clipboard");
-//     setTimeout(() => setCopied(false), 2000);
-//   };
-
-//   const handleDownload = () => {
-//     const blob = new Blob([fullOutput], { type: "text/plain" });
-//     const url = URL.createObjectURL(blob);
-//     const a = document.createElement("a");
-//     a.href = url;
-//     a.download = `daily-report-${new Date().toISOString().split("T")[0]}.txt`;
-//     a.click();
-//     URL.revokeObjectURL(url);
-//     message.success("Report downloaded");
-//   };
-
-//   return (
-//     <div className="bg-gray-800 rounded-lg overflow-hidden">
-//       <div className="px-5 py-4 border-b border-gray-700 flex items-center justify-between">
-//         <div className="flex items-center gap-3">
-//           <FileText size={20} className="text-emerald-400" />
-//           <div>
-//             <h3 className="font-semibold text-white">Generated Output</h3>
-//             <p className="text-xs text-gray-400">
-//               Copy or download your report
-//             </p>
-//           </div>
-//         </div>
-//         <div className="flex gap-2">
-//           <button
-//             onClick={handleDownload}
-//             className="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-700 text-white text-sm rounded hover:bg-gray-600 transition-colors"
-//           >
-//             <Download size={14} />
-//             Download
-//           </button>
-//           <button
-//             onClick={handleCopy}
-//             className={`inline-flex items-center gap-2 px-3 py-1.5 text-sm rounded transition-colors ${
-//               copied
-//                 ? "bg-green-500 text-white"
-//                 : "bg-emerald-600 text-white hover:bg-emerald-700"
-//             }`}
-//           >
-//             {copied ? <Check size={14} /> : <Copy size={14} />}
-//             {copied ? "Copied!" : "Copy"}
-//           </button>
-//         </div>
-//       </div>
-//       <div className="p-4">
-//         <pre className="bg-gray-900 p-4 rounded text-gray-300 text-sm whitespace-pre-wrap overflow-x-auto max-h-[400px] overflow-y-auto font-mono">
-//           {fullOutput}
-//         </pre>
-//       </div>
-//     </div>
-//   );
-// }
-
-
 import { Copy, Check, Download, FileText } from "lucide-react";
 import { useState, useMemo } from "react";
 import { message } from "antd";
 
-export default function OutputFormat({ tasks = [], testing = {} }) {
+export default function OutputFormat({ tasks = [], testing = {}, discussion = {} }) {
   const [copied, setCopied] = useState(false);
 
   const formatDecimalHours = (min) => {
@@ -248,20 +48,25 @@ export default function OutputFormat({ tasks = [], testing = {} }) {
   };
 
   const getTaskMinutes = (t = {}) => {
+    const h = Number(t.hrs) || 0;
+    const m = Number(t.min) || 0;
+
+    if (h > 0 || m > 0) {
+      return h * 60 + m;
+    }
+
     if (typeof t.totalMin === "number" && !Number.isNaN(t.totalMin)) {
       return t.totalMin;
     }
 
     if (
       typeof t.finalTime === "number" &&
-      !Number.isNaN(t.finalTime) &&
-      !t.hrs &&
-      !t.min
+      !Number.isNaN(t.finalTime)
     ) {
       return t.finalTime;
     }
 
-    return (Number(t.hrs) || 0) * 60 + (Number(t.min) || 0);
+    return 0;
   };
 
   const normalizeType = (type = "") => {
@@ -320,7 +125,11 @@ export default function OutputFormat({ tasks = [], testing = {} }) {
     return "";
   };
 
-  const fullOutput = useMemo(() => {
+  const { fullOutput, outputBlocks } = useMemo(() => {
+    const blocks = [];
+
+    blocks.push({ type: "header", text: `DATE: ${getCurrentDate()}` });
+
     const generateTasksOutput = () => {
       const groups = {};
       const uncategorized = [];
@@ -337,7 +146,6 @@ export default function OutputFormat({ tasks = [], testing = {} }) {
         groups[normalizedType].push(t);
       });
 
-      let output = "";
       let globalIdx = 1;
 
       const orderedCategories = ["Panel Bugs", "NF", "internal"];
@@ -348,7 +156,7 @@ export default function OutputFormat({ tasks = [], testing = {} }) {
 
         const headerPrefix = cat === "Panel Bugs" ? "" : "* ";
         const suffix = cat === "Panel Bugs" ? "" : " :";
-        output += `${headerPrefix}[${cat}] [${arr.length}]${suffix}\n\n`;
+        blocks.push({ type: "category", text: `${headerPrefix}[${cat}] [${arr.length}]${suffix}` });
 
         arr.forEach((t) => {
           const totalMin = getTaskMinutes(t);
@@ -358,7 +166,10 @@ export default function OutputFormat({ tasks = [], testing = {} }) {
           const hrDecimal = formatDecimalHours(totalMin);
           const desc = extractDescription(t.task);
 
-          output += `${globalIdx} . ${status} => ${cuLink} >> (${status}) >> ${minDisplay} >> ${hrDecimal}\n\n=> ${desc}\n\n`;
+          blocks.push({ 
+            type: "task", 
+            text: `${globalIdx} . ${status} => ${cuLink} >> (${status}) >> ${minDisplay} >> ${hrDecimal}\n\n=> ${desc}` 
+          });
           globalIdx++;
         });
       });
@@ -367,7 +178,7 @@ export default function OutputFormat({ tasks = [], testing = {} }) {
         if (orderedCategories.includes(type)) return;
         if (!arr || arr.length === 0) return;
 
-        output += `[${type}] [${arr.length}]\n\n`;
+        blocks.push({ type: "category", text: `[${type}] [${arr.length}]` });
 
         arr.forEach((t) => {
           const totalMin = getTaskMinutes(t);
@@ -377,13 +188,16 @@ export default function OutputFormat({ tasks = [], testing = {} }) {
           const hrDecimal = formatDecimalHours(totalMin);
           const desc = extractDescription(t.task);
 
-          output += `${globalIdx} . ${status} => ${cuLink} >> (${status}) >> ${minDisplay} >> ${hrDecimal}\n\n=> ${desc}\n\n`;
+          blocks.push({ 
+            type: "task", 
+            text: `${globalIdx} . ${status} => ${cuLink} >> (${status}) >> ${minDisplay} >> ${hrDecimal}\n\n=> ${desc}` 
+          });
           globalIdx++;
         });
       });
 
       if (uncategorized.length > 0) {
-        output += `[Uncategorized] [${uncategorized.length}]\n\n`;
+        blocks.push({ type: "category", text: `[Uncategorized] [${uncategorized.length}]` });
 
         uncategorized.forEach((t) => {
           const totalMin = getTaskMinutes(t);
@@ -393,12 +207,26 @@ export default function OutputFormat({ tasks = [], testing = {} }) {
           const hrDecimal = formatDecimalHours(totalMin);
           const desc = extractDescription(t.task);
 
-          output += `${globalIdx} . ${status} => ${cuLink} >> (${status}) >> ${minDisplay} >> ${hrDecimal}\n\n=> ${desc}\n\n`;
+          blocks.push({ 
+            type: "task", 
+            text: `${globalIdx} . ${status} => ${cuLink} >> (${status}) >> ${minDisplay} >> ${hrDecimal}\n\n=> ${desc}` 
+          });
           globalIdx++;
         });
       }
+    };
 
-      return output.trim();
+    const generateDiscussionOutput = () => {
+      const h = Number(discussion?.hrs) || 0;
+      const m = Number(discussion?.min) || 0;
+      if (h === 0 && m === 0 && !discussion?.note) return;
+
+      const totalMin = h * 60 + m;
+      const minDisplay = formatMinutesDisplay(totalMin);
+      const hrDecimal = formatDecimalHours(totalMin);
+      const note = discussion?.note || "Discussion";
+
+      blocks.push({ type: "discussion", text: `[Discussion]\n\n=> ${note} >> ${minDisplay} >> ${hrDecimal}` });
     };
 
     const generatePanelUpdateOutput = () => {
@@ -406,15 +234,16 @@ export default function OutputFormat({ tasks = [], testing = {} }) {
         (t) => normalizeType(t.type || "") === "Panel Bugs"
       );
 
-      if (!panelTasks.length) return "";
+      if (!panelTasks.length) return;
 
-      let output = `------------------------------------------------------------------------\n\n`;
-      output += `Update Format\n\n`;
+      blocks.push({ type: "divider", text: `------------------------------------------------------------------------` });
+      blocks.push({ type: "category", text: `Update Format` });
 
       const statusCounts = {};
       let validRevisionMin = 0;
       let validFunctionalityMin = 0;
       let invalidBugMin = 0;
+      let panelUpdatesText = [];
 
       panelTasks.forEach((t) => {
         const status = normalizePanelStatus(t.status || "");
@@ -423,10 +252,7 @@ export default function OutputFormat({ tasks = [], testing = {} }) {
         const extra = getPanelExtra(t, status);
         const bugType = String(t.bugType || "").trim().toLowerCase();
 
-        output += `${status} => ${cuLink || "-"} => ${formatMinutesDisplay(
-          totalMin
-        )}${extra ? ` (${extra})` : ""}\n`;
-
+        panelUpdatesText.push(`${status} => ${cuLink || "-"} => ${formatMinutesDisplay(totalMin)}${extra ? ` (${extra})` : ""}`);
         statusCounts[status] = (statusCounts[status] || 0) + 1;
 
         if (bugType === "revision") {
@@ -446,6 +272,8 @@ export default function OutputFormat({ tasks = [], testing = {} }) {
           invalidBugMin += totalMin;
         }
       });
+      
+      blocks.push({ type: "panel_list", text: panelUpdatesText.join("\n") });
 
       const totalOrder = [
         "Done",
@@ -462,71 +290,62 @@ export default function OutputFormat({ tasks = [], testing = {} }) {
         .map((key) => `${key} = ${statusCounts[key]}`)
         .join(", ");
 
-      output += `\nTotal\n`;
-      output += `${totalLine || "No panel updates"}\n\n`;
-
-      output += `Total time spent for Valid bugs Revision - ${formatOnlyMinutes(
-        validRevisionMin
-      )}\n`;
-      output += `Total time spent for Valid bugs Functionality - ${formatOnlyMinutes(
-        validFunctionalityMin
-      )}\n`;
-      output += `Total time spent for Invalid bugs - ${formatOnlyMinutes(
-        invalidBugMin
-      )}\n`;
-
-      output += `\n------------------------------------------------------------------------`;
-
-      return output;
+      let statsText = `Total\n${totalLine || "No panel updates"}\n\n`;
+      statsText += `Total time spent for Valid bugs Revision - ${formatOnlyMinutes(validRevisionMin)}\n`;
+      statsText += `Total time spent for Valid bugs Functionality - ${formatOnlyMinutes(validFunctionalityMin)}\n`;
+      statsText += `Total time spent for Invalid bugs - ${formatOnlyMinutes(invalidBugMin)}`;
+      
+      blocks.push({ type: "panel_stats", text: statsText });
     };
 
     const generateTestingOutput = () => {
-      let output = `------------------------------------------------------------------------\n\n`;
-      output += `${testing.testingModule || "N/A"} -> testing on dev/beta >>> \n\n\n`;
-      output += `**Testing Module => ${testing.testingModule || "N/A"}\n\n`;
-      output += `and\n\n`;
-      output += `**Test case scenario => ${testing.testCaseScenario || "N/A"}\n\n`;
-      output += `and\n\n`;
-      output += `**bug founded module : - ${testing.bugFoundedModule || "N/A"}\n\n`;
-      output += `and\n\n`;
+      blocks.push({ type: "divider", text: `------------------------------------------------------------------------` });
+      blocks.push({ type: "testing_header", text: `${testing.testingModule || "N/A"} -> testing on dev/beta >>> \n\n\n**Testing Module => ${testing.testingModule || "N/A"}\n\nand\n\n**Test case scenario => ${testing.testCaseScenario || "N/A"}\n\nand\n\n**bug founded module : - ${testing.bugFoundedModule || "N/A"}` });
 
       if (testing.bugs && testing.bugs.length > 0) {
         testing.bugs.forEach((bug) => {
           if (bug.description) {
-            output += `${bug.description}\n\nand\n\n`;
+            blocks.push({ type: "testing_bug", text: `and\n\n${bug.description}` });
           }
         });
       }
 
-      output += `Total Bug Count => ${testing.bugs?.length || 0}\n\n`;
-      output += `[Created Bungs Url]`;
+      blocks.push({ type: "testing_stats", text: `and\n\nTotal Bug Count => ${testing.bugs?.length || 0}\n\n[Created Bungs Url]` });
 
       if (testing.bugs && testing.bugs.length > 0) {
-        testing.bugs.forEach((bug, index) => {
+        let urlsText = testing.bugs.map((bug, index) => {
           if (bug.url) {
-            output += `   ${index + 1} . ${bug.url}`;
-            if (index < testing.bugs.length - 1) output += `\n`;
+            return `   ${index + 1} . ${bug.url}`;
           }
-        });
+          return null;
+        }).filter(Boolean).join("\n");
+        if (urlsText) {
+          blocks.push({ type: "testing_urls", text: urlsText });
+        }
       }
 
-      output += `\n\n------------------------------------------------------------------------`;
-      return output;
+      blocks.push({ type: "divider", text: `------------------------------------------------------------------------` });
     };
 
-    const normalOutput = generateTasksOutput();
-    const panelOutput = generatePanelUpdateOutput();
-    const testingOutput = generateTestingOutput();
+    generateTasksOutput();
+    generateDiscussionOutput();
+    generatePanelUpdateOutput();
+    generateTestingOutput();
 
-    return `DATE: ${getCurrentDate()}\n\n${normalOutput}${
-      panelOutput ? `\n\n${panelOutput}` : ""
-    }\n\n${testingOutput}`;
-  }, [tasks, testing]);
+    const fullText = blocks.map(b => b.text).join('\n\n');
+
+    return { fullOutput: fullText, outputBlocks: blocks };
+  }, [tasks, testing, discussion]);
+
+  const handleCopyText = (text) => {
+    navigator.clipboard.writeText(text);
+    message.success("Copied to clipboard");
+  };
 
   const handleCopy = () => {
     navigator.clipboard.writeText(fullOutput);
     setCopied(true);
-    message.success("Copied to clipboard");
+    message.success("Full output copied to clipboard");
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -565,11 +384,10 @@ export default function OutputFormat({ tasks = [], testing = {} }) {
 
           <button
             onClick={handleCopy}
-            className={`inline-flex items-center gap-2 px-3 py-1.5 text-sm rounded transition-colors ${
-              copied
-                ? "bg-green-500 text-white"
-                : "bg-emerald-600 text-white hover:bg-emerald-700"
-            }`}
+            className={`inline-flex items-center gap-2 px-3 py-1.5 text-sm rounded transition-colors ${copied
+              ? "bg-green-500 text-white"
+              : "bg-emerald-600 text-white hover:bg-emerald-700"
+              }`}
           >
             {copied ? <Check size={14} /> : <Copy size={14} />}
             {copied ? "Copied!" : "Copy"}
@@ -577,10 +395,28 @@ export default function OutputFormat({ tasks = [], testing = {} }) {
         </div>
       </div>
 
-      <div className="p-4">
-        <pre className="bg-gray-900 p-4 rounded text-gray-300 text-sm whitespace-pre-wrap overflow-x-auto max-h-[400px] overflow-y-auto font-mono">
-          {fullOutput}
-        </pre>
+      <div className="p-4 bg-gray-50 border-t border-gray-200">
+        <div className="bg-white border border-gray-200 rounded-lg shadow-sm text-sm whitespace-pre-wrap max-h-[600px] overflow-y-auto font-mono text-gray-800">
+          {outputBlocks.map((block, i) => (
+            <div 
+              key={i} 
+              className={`relative group px-4 py-2 hover:bg-emerald-50 transition-colors border-b border-gray-100 last:border-0 ${block.type === 'divider' ? 'bg-gray-100 text-gray-400' : ''} ${block.type === 'category' ? 'bg-gray-100 font-bold text-gray-700' : ''}`}
+            >
+              {/* Copy button that shows on hover */}
+              {block.type !== 'divider' && block.type !== 'header' && (
+                <button 
+                  onClick={() => handleCopyText(block.text)}
+                  title="Copy this section"
+                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 bg-white border border-emerald-200 text-emerald-600 hover:bg-emerald-600 hover:text-white p-1.5 rounded-md shadow-sm transition-all duration-200"
+                >
+                  <Copy size={14} />
+                </button>
+              )}
+              
+              <div className="pr-8">{block.text}</div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

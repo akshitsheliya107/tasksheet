@@ -58,12 +58,65 @@ useEffect(() => {
 
   const tasksStats = useMemo(() => {
     return tasks.reduce(
-      (acc, t) => ({
-        totalMin: acc.totalMin + (t.totalMin || 0),
-        validTime: acc.validTime + (t.validTime || 0),
-        invalidTime: acc.invalidTime + (t.invalidTime || 0),
-      }),
-      { totalMin: 0, validTime: 0, invalidTime: 0 }
+      (acc, t) => {
+        const h = Number(t.hrs) || 0;
+        const m = Number(t.min) || 0;
+        let totalMin = 0;
+        
+        if (h > 0 || m > 0) {
+          totalMin = h * 60 + m;
+        } else {
+          totalMin = t.totalMin || t.total_min || 0;
+        }
+
+        const finalTime = Number((totalMin / 60).toFixed(2));
+        const isValid = t.is_valid !== undefined ? t.is_valid : t.isValid;
+
+        let validTime = 0;
+        let invalidTime = 0;
+
+        if (isValid === true) {
+          validTime = finalTime;
+        } else if (isValid === false) {
+          invalidTime = finalTime;
+        }
+
+        acc.totalMin += totalMin;
+        acc.validTime += validTime;
+        acc.invalidTime += invalidTime;
+
+        if (t.type && typeof t.type === "string") {
+          const type = t.type.toLowerCase();
+          let category = null;
+          if (type.includes("panel")) category = "panel";
+          else if (type.includes("internal")) category = "internal";
+          else if (type === "nf") category = "nf";
+
+          if (category) {
+            acc.breakdown[category].count += 1;
+            
+            if (isValid === true) {
+              acc.breakdown[category].validCount += 1;
+              acc.breakdown[category].validTime += validTime;
+            } else if (isValid === false) {
+              acc.breakdown[category].invalidCount += 1;
+              acc.breakdown[category].invalidTime += invalidTime;
+            }
+          }
+        }
+
+        return acc;
+      },
+      { 
+        totalMin: 0, 
+        validTime: 0, 
+        invalidTime: 0,
+        breakdown: {
+          panel: { count: 0, validCount: 0, validTime: 0, invalidCount: 0, invalidTime: 0 },
+          internal: { count: 0, validCount: 0, validTime: 0, invalidCount: 0, invalidTime: 0 },
+          nf: { count: 0, validCount: 0, validTime: 0, invalidCount: 0, invalidTime: 0 },
+        }
+      }
     );
   }, [tasks]);
 
@@ -225,6 +278,43 @@ useEffect(() => {
           iconColor="text-red-600"
           borderColor="border-red-200"
         />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {['internal', 'panel', 'nf'].map((cat) => {
+          const data = tasksStats.breakdown[cat];
+          const titles = { internal: "Internal Tasks", panel: "Panel Bugs", nf: "NF" };
+          const colors = { 
+            internal: "bg-indigo-50 border-indigo-200", 
+            panel: "bg-amber-50 border-amber-200", 
+            nf: "bg-cyan-50 border-cyan-200" 
+          };
+          
+          return (
+            <div key={cat} className={`rounded-xl p-4 border-2 ${colors[cat]} flex flex-col justify-between transition-all duration-200 hover:shadow-md`}>
+              <div className="font-bold text-gray-800 mb-3 uppercase text-xs tracking-wider flex items-center justify-between border-b border-gray-200 pb-2">
+                <span>{titles[cat]}</span>
+                <span className="bg-white px-2 py-0.5 rounded-full text-[10px] text-gray-500 font-bold border border-gray-200">
+                  TOTAL: {data.count}
+                </span>
+              </div>
+              <div className="flex justify-between items-center bg-white/70 p-2.5 rounded-lg mb-2 shadow-sm border border-white">
+                <div className="flex items-center gap-1.5">
+                  <CheckCircle size={14} className="text-emerald-500" />
+                  <span className="text-xs font-bold text-gray-600">VALID <span className="text-[10px] text-gray-400">({data.validCount})</span></span>
+                </div>
+                <span className="font-bold text-emerald-600">{data.validTime.toFixed(2)}<span className="text-[10px] ml-0.5 text-gray-500">h</span></span>
+              </div>
+              <div className="flex justify-between items-center bg-white/70 p-2.5 rounded-lg shadow-sm border border-white">
+                <div className="flex items-center gap-1.5">
+                  <XCircle size={14} className="text-red-500" />
+                  <span className="text-xs font-bold text-gray-600">INVALID <span className="text-[10px] text-gray-400">({data.invalidCount})</span></span>
+                </div>
+                <span className="font-bold text-red-600">{data.invalidTime.toFixed(2)}<span className="text-[10px] ml-0.5 text-gray-500">h</span></span>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden transition-all duration-300 hover:shadow-md">

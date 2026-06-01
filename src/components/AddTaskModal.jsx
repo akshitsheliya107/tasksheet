@@ -9,6 +9,7 @@ export default function AddTaskModal({ isOpen, onClose, onAdd }) {
   const [task, setTask] = useState({
     date: new Date().toLocaleDateString(),
     task: "",
+    cuLink: "",
     hrs: 0,
     min: 0,
   });
@@ -25,6 +26,7 @@ export default function AddTaskModal({ isOpen, onClose, onAdd }) {
       setTask({
         date: new Date().toLocaleDateString(),
         task: "",
+        cuLink: "",
         hrs: 0,
         min: 0,
       });
@@ -55,7 +57,7 @@ export default function AddTaskModal({ isOpen, onClose, onAdd }) {
       }}
       cancelText="Cancel"
       centered
-      destroyOnClose
+      destroyOnHidden
     >
       <div className="space-y-4 py-4">
         {/* Date */}
@@ -68,6 +70,19 @@ export default function AddTaskModal({ isOpen, onClose, onAdd }) {
             value={task.date}
             onChange={(e) => setTask({ ...task, date: e.target.value })}
             placeholder="DD/MM/YYYY"
+          />
+        </div>
+
+        {/* CU Link */}
+        <div>
+          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
+            <span className="font-bold text-blue-600 text-[10px] px-1 py-0.5 bg-blue-50 rounded border border-blue-200">CU</span>
+            ClickUp Link
+          </label>
+          <Input
+            value={task.cuLink}
+            onChange={(e) => setTask({ ...task, cuLink: e.target.value })}
+            placeholder="https://app.clickup.com/t/..."
           />
         </div>
 

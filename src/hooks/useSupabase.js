@@ -64,7 +64,7 @@ const transformTask = (task) => ({
       const defaultTasks = Array(count)
         .fill(null)
         .map((_, i) => ({
-          date: i === 0 ? new Date().toLocaleDateString() : "",
+          date: new Date().toLocaleDateString(),
           task: "",
           hrs: 0,
           min: 0,
