@@ -112,7 +112,7 @@ export default function ReportDetailsModal({ isOpen, onClose, snapshot }) {
   const columns = [
     { title: "Task", dataIndex: "task", key: "task", render: (text, rec) => (
       <div>
-        <p className="font-medium text-gray-800 whitespace-pre-wrap text-sm">{text}</p>
+        <p className="font-medium text-gray-800 dark:text-gray-200 whitespace-pre-wrap text-sm">{text}</p>
         {rec.cu_link || rec.cuLink ? (
           <a href={rec.cu_link || rec.cuLink} target="_blank" rel="noopener noreferrer" className="text-blue-500 text-xs hover:underline break-all mt-1 inline-block">
             {rec.cu_link || rec.cuLink}
@@ -136,14 +136,14 @@ export default function ReportDetailsModal({ isOpen, onClose, snapshot }) {
   return (
     <Modal
       title={
-        <div className="flex items-center justify-between pb-2 border-b border-gray-100 pr-6">
-          <div className="flex items-center gap-2 text-xl font-bold text-gray-800">
+        <div className="flex items-center justify-between pb-2 border-b border-gray-100 dark:border-gray-700/50 pr-6">
+          <div className="flex items-center gap-2 text-xl font-bold text-gray-800 dark:text-white">
             <FileText size={24} className="text-emerald-600" />
             Report Details: {snapshot.snapshot_date}
           </div>
           <button 
             onClick={handleCopyForTeams}
-            className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white rounded-lg text-sm font-semibold transition-colors border border-blue-200 hover:border-blue-600 shadow-sm"
+            className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-600 dark:hover:bg-blue-500 hover:text-white rounded-lg text-sm font-semibold transition-colors border border-blue-200 dark:border-blue-800/50 hover:border-blue-600 dark:hover:border-blue-500 shadow-sm"
           >
             <Copy size={16} />
             Copy for Teams
@@ -161,27 +161,27 @@ export default function ReportDetailsModal({ isOpen, onClose, snapshot }) {
         
         {/* Stats Summary */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
-            <p className="text-xs text-gray-500 uppercase font-semibold">Total Time</p>
-            <p className="text-lg font-bold text-gray-800">{snapshot.total_stats?.grandTotalTime || "0.00"} hrs</p>
+          <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg border border-gray-100 dark:border-gray-700">
+            <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold">Total Time</p>
+            <p className="text-lg font-bold text-gray-800 dark:text-gray-100">{snapshot.total_stats?.grandTotalTime || "0.00"} hrs</p>
           </div>
-          <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
-            <p className="text-xs text-gray-500 uppercase font-semibold">Tasks Logged</p>
-            <p className="text-lg font-bold text-gray-800">{tasks.length}</p>
+          <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg border border-gray-100 dark:border-gray-700">
+            <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold">Tasks Logged</p>
+            <p className="text-lg font-bold text-gray-800 dark:text-gray-100">{tasks.length}</p>
           </div>
-          <div className="bg-emerald-50 p-3 rounded-lg border border-emerald-100">
-            <p className="text-xs text-emerald-600 uppercase font-semibold">Valid Time</p>
-            <p className="text-lg font-bold text-emerald-700">{snapshot.total_stats?.validTime?.toFixed(2) || "0.00"} hrs</p>
+          <div className="bg-emerald-50 dark:bg-emerald-900/30 p-3 rounded-lg border border-emerald-100 dark:border-emerald-800/50">
+            <p className="text-xs text-emerald-600 dark:text-emerald-400 uppercase font-semibold">Valid Time</p>
+            <p className="text-lg font-bold text-emerald-700 dark:text-emerald-300">{snapshot.total_stats?.validTime?.toFixed(2) || "0.00"} hrs</p>
           </div>
-          <div className="bg-red-50 p-3 rounded-lg border border-red-100">
-            <p className="text-xs text-red-600 uppercase font-semibold">Invalid Time</p>
-            <p className="text-lg font-bold text-red-700">{snapshot.total_stats?.invalidTime?.toFixed(2) || "0.00"} hrs</p>
+          <div className="bg-red-50 dark:bg-red-900/30 p-3 rounded-lg border border-red-100 dark:border-red-800/50">
+            <p className="text-xs text-red-600 dark:text-red-400 uppercase font-semibold">Invalid Time</p>
+            <p className="text-lg font-bold text-red-700 dark:text-red-300">{snapshot.total_stats?.invalidTime?.toFixed(2) || "0.00"} hrs</p>
           </div>
         </div>
 
         {/* Tasks Section */}
         <div>
-          <h3 className="text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">
+          <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3 flex items-center gap-2">
             <CheckCircle size={18} className="text-emerald-600" /> Tasks Breakdown
           </h3>
           <Table 
@@ -197,12 +197,12 @@ export default function ReportDetailsModal({ isOpen, onClose, snapshot }) {
         {/* Discussion Section */}
         {(discussion.hrs > 0 || discussion.min > 0 || discussion.note) && (
           <div>
-            <h3 className="text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">
-              <MessageSquare size={18} className="text-blue-600" /> Discussion
+            <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3 flex items-center gap-2">
+              <MessageSquare size={18} className="text-blue-600 dark:text-blue-400" /> Discussion
             </h3>
-            <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 shadow-sm">
-              <p className="text-gray-700 whitespace-pre-wrap">{discussion.note || "General discussion"}</p>
-              <div className="mt-3 flex items-center gap-2 text-blue-700 font-semibold text-sm bg-white inline-flex px-3 py-1.5 rounded-lg border border-blue-100">
+            <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800/50 shadow-sm">
+              <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{discussion.note || "General discussion"}</p>
+              <div className="mt-3 flex items-center gap-2 text-blue-700 dark:text-blue-300 font-semibold text-sm bg-white dark:bg-gray-800 inline-flex px-3 py-1.5 rounded-lg border border-blue-100 dark:border-blue-800/50">
                 <Clock size={14} />
                 Time Spent: {formatMin((Number(discussion.hrs) || 0) * 60 + (Number(discussion.min) || 0))}
               </div>
@@ -213,24 +213,24 @@ export default function ReportDetailsModal({ isOpen, onClose, snapshot }) {
         {/* Testing Section */}
         {(testing.testing_module || testing.test_case_scenario || (testing.bugs && testing.bugs.length > 0)) && (
           <div>
-            <h3 className="text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">
-              <Bug size={18} className="text-purple-600" /> Testing
+            <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3 flex items-center gap-2">
+              <Bug size={18} className="text-purple-600 dark:text-purple-400" /> Testing
             </h3>
-            <div className="bg-purple-50 p-5 rounded-xl border border-purple-100 shadow-sm space-y-4">
+            <div className="bg-purple-50 dark:bg-purple-900/20 p-5 rounded-xl border border-purple-100 dark:border-purple-800/50 shadow-sm space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-white p-3 rounded-lg border border-purple-100">
+                <div className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-purple-100 dark:border-purple-800/50">
                   <span className="text-xs text-purple-400 uppercase font-bold block mb-1">Testing Module</span>
-                  <p className="font-semibold text-gray-800">{testing.testing_module || "N/A"}</p>
+                  <p className="font-semibold text-gray-800 dark:text-gray-200">{testing.testing_module || "N/A"}</p>
                 </div>
-                <div className="bg-white p-3 rounded-lg border border-purple-100">
+                <div className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-purple-100 dark:border-purple-800/50">
                   <span className="text-xs text-purple-400 uppercase font-bold block mb-1">Found Bug In</span>
-                  <p className="font-semibold text-gray-800">{testing.bug_founded_module || "N/A"}</p>
+                  <p className="font-semibold text-gray-800 dark:text-gray-200">{testing.bug_founded_module || "N/A"}</p>
                 </div>
               </div>
               
-              <div className="bg-white p-3 rounded-lg border border-purple-100">
+              <div className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-purple-100 dark:border-purple-800/50">
                 <span className="text-xs text-purple-400 uppercase font-bold block mb-1">Test Case Scenario</span>
-                <p className="text-gray-700 text-sm whitespace-pre-wrap">{testing.test_case_scenario || "N/A"}</p>
+                <p className="text-gray-700 dark:text-gray-300 text-sm whitespace-pre-wrap">{testing.test_case_scenario || "N/A"}</p>
               </div>
 
               {testing.bugs && testing.bugs.length > 0 && (
@@ -238,10 +238,10 @@ export default function ReportDetailsModal({ isOpen, onClose, snapshot }) {
                   <span className="text-xs text-purple-400 uppercase font-bold mb-2 block">Bugs Logged ({testing.bugs.length})</span>
                   <ul className="space-y-2">
                     {testing.bugs.map((bug, i) => (
-                      <li key={bug.id || i} className="text-sm bg-white p-3 rounded-lg border border-purple-200">
-                        {bug.description && <p className="text-gray-700 whitespace-pre-wrap mb-2">{bug.description}</p>}
+                      <li key={bug.id || i} className="text-sm bg-white dark:bg-gray-800 p-3 rounded-lg border border-purple-200 dark:border-purple-700/50">
+                        {bug.description && <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap mb-2">{bug.description}</p>}
                         {bug.url && (
-                          <a href={bug.url} target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:underline text-xs break-all flex items-center gap-1">
+                          <a href={bug.url} target="_blank" rel="noopener noreferrer" className="text-purple-600 dark:text-purple-400 hover:underline text-xs break-all flex items-center gap-1">
                             <span className="font-semibold">URL:</span> {bug.url}
                           </a>
                         )}

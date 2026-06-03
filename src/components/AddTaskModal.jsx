@@ -43,8 +43,8 @@ export default function AddTaskModal({ isOpen, onClose, onAdd }) {
     <Modal
       title={
         <div className="flex items-center gap-2">
-          <FileText size={20} className="text-emerald-600" />
-          <span>Add New Task</span>
+          <FileText size={20} className="text-emerald-600 dark:text-emerald-400" />
+          <span className="dark:text-white">Add New Task</span>
         </div>
       }
       open={isOpen}
@@ -62,7 +62,7 @@ export default function AddTaskModal({ isOpen, onClose, onAdd }) {
       <div className="space-y-4 py-4">
         {/* Date */}
         <div>
-          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
+          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             <Calendar size={14} />
             Date
           </label>
@@ -75,8 +75,8 @@ export default function AddTaskModal({ isOpen, onClose, onAdd }) {
 
         {/* CU Link */}
         <div>
-          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
-            <span className="font-bold text-blue-600 text-[10px] px-1 py-0.5 bg-blue-50 rounded border border-blue-200">CU</span>
+          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <span className="font-bold text-blue-600 dark:text-blue-400 text-[10px] px-1 py-0.5 bg-blue-50 dark:bg-blue-900/30 rounded border border-blue-200 dark:border-blue-800/50">CU</span>
             ClickUp Link
           </label>
           <Input
@@ -88,7 +88,7 @@ export default function AddTaskModal({ isOpen, onClose, onAdd }) {
 
         {/* Task Description */}
         <div>
-          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
+          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             <FileText size={14} />
             Task Description <span className="text-red-500">*</span>
           </label>
@@ -103,7 +103,7 @@ export default function AddTaskModal({ isOpen, onClose, onAdd }) {
         {/* Time */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
+            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               <Clock size={14} />
               Hours
             </label>
@@ -115,7 +115,7 @@ export default function AddTaskModal({ isOpen, onClose, onAdd }) {
             />
           </div>
           <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
+            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               <Clock size={14} />
               Minutes
             </label>

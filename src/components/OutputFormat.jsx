@@ -117,13 +117,16 @@ export default function OutputFormat({ tasks = [], testing = {}, discussion = {}
   };
 
   const getPanelExtra = (task, normalizedStatus) => {
-    // Debug & Transfer ke case me agar koi side mention hai
+    let side = "";
     if (normalizedStatus === "Debug & Transfer") {
-      const side = task.panelSide || task.transferType || task.devType || task.assignedSide;
-      if (side) return side;
+      side = task.panelSide || task.transferType || task.devType || task.assignedSide || "";
     }
+    const bug = task.bugType || task.bug_type || "";
 
-    return task.bugType || "";
+    if (side && bug) return `${side}, ${bug}`;
+    if (side) return side;
+    if (bug) return bug;
+    return "";
   };
 
   const { fullOutput, outputBlocks } = useMemo(() => {
@@ -162,10 +165,10 @@ export default function OutputFormat({ tasks = [], testing = {}, discussion = {}
 
         const headerPrefix = catName === "Panel Bugs" ? "" : "* ";
         const suffix = catName === "Panel Bugs" ? "" : " :";
-        
-        blocks.push({ 
-          type: "category", 
-          text: `${headerPrefix}[${catName}] [${arr.length}] [valid (${validCount}) , invalid (${invalidCount})]${suffix}` 
+
+        blocks.push({
+          type: "category",
+          text: `${headerPrefix}[${catName}] [${arr.length}] [valid (${validCount}) , invalid (${invalidCount})]${suffix}`
         });
 
         arr.forEach((t) => {
@@ -176,13 +179,13 @@ export default function OutputFormat({ tasks = [], testing = {}, discussion = {}
           const minDisplay = formatMinutesDisplay(totalMin);
           const hrDecimal = formatDecimalHours(totalMin);
           const desc = extractDescription(t.task);
-          
+
           const validStatus = t.isValid !== undefined ? t.isValid : t.is_valid;
           const validTag = validStatus === true ? "[VALID] > " : validStatus === false ? "[INVALID] > " : "";
 
-          blocks.push({ 
-            type: "task", 
-            text: `${validTag}${bugType} > ${cuLink || "-"} > ${status} > ${minDisplay} > ${hrDecimal}\n\n=> ${desc}` 
+          blocks.push({
+            type: "task",
+            text: `${validTag}${bugType} > ${cuLink || "-"} > ${status} > ${minDisplay} > ${hrDecimal}\n\n=> ${desc}`
           });
         });
       };
@@ -222,7 +225,7 @@ export default function OutputFormat({ tasks = [], testing = {}, discussion = {}
       if (!panelTasks.length) return;
 
       blocks.push({ type: "divider", text: `------------------------------------------------------------------------` });
-      blocks.push({ type: "category", text: `Update Format` });
+      blocks.push({ type: "category", text: `Panel Bugs` });
 
       const statusCounts = {};
       let validRevisionMin = 0;
@@ -257,7 +260,7 @@ export default function OutputFormat({ tasks = [], testing = {}, discussion = {}
           invalidBugMin += totalMin;
         }
       });
-      
+
       blocks.push({ type: "panel_list", text: panelUpdatesText.join("\n") });
 
       const totalOrder = [
@@ -279,7 +282,7 @@ export default function OutputFormat({ tasks = [], testing = {}, discussion = {}
       statsText += `Total time spent for Valid bugs Revision - ${formatOnlyMinutes(validRevisionMin)}\n`;
       statsText += `Total time spent for Valid bugs Functionality - ${formatOnlyMinutes(validFunctionalityMin)}\n`;
       statsText += `Total time spent for Invalid bugs - ${formatOnlyMinutes(invalidBugMin)}`;
-      
+
       blocks.push({ type: "panel_stats", text: statsText });
     };
 
@@ -389,24 +392,24 @@ export default function OutputFormat({ tasks = [], testing = {}, discussion = {}
         </div>
       </div>
 
-      <div className="p-4 bg-gray-50 border-t border-gray-200">
-        <div className="bg-white border border-gray-200 rounded-lg shadow-sm text-sm whitespace-pre-wrap max-h-[600px] overflow-y-auto font-mono text-gray-800">
+      <div className="p-4 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 transition-colors duration-300">
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm text-sm whitespace-pre-wrap max-h-[600px] overflow-y-auto font-mono text-gray-800 dark:text-gray-100 transition-colors duration-300">
           {outputBlocks.map((block, i) => (
-            <div 
-              key={i} 
-              className={`relative group px-4 py-2 hover:bg-emerald-50 transition-colors border-b border-gray-100 last:border-0 ${block.type === 'divider' ? 'bg-gray-100 text-gray-400' : ''} ${block.type === 'category' ? 'bg-gray-100 font-bold text-gray-700' : ''}`}
+            <div
+              key={i}
+              className={`relative group px-4 py-2 hover:bg-emerald-50 dark:hover:bg-gray-700/50 transition-colors border-b border-gray-100 dark:border-gray-700/50 last:border-0 ${block.type === 'divider' ? 'bg-gray-100 dark:bg-gray-800/80 text-gray-400 dark:text-gray-500' : ''} ${block.type === 'category' ? 'bg-gray-100 dark:bg-gray-700 font-bold text-gray-700 dark:text-gray-200' : ''}`}
             >
               {/* Copy button that shows on hover */}
               {block.type !== 'divider' && block.type !== 'header' && (
-                <button 
+                <button
                   onClick={() => handleCopyText(block.text)}
                   title="Copy this section"
-                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 bg-white border border-emerald-200 text-emerald-600 hover:bg-emerald-600 hover:text-white p-1.5 rounded-md shadow-sm transition-all duration-200"
+                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 bg-white dark:bg-gray-600 border border-emerald-200 dark:border-gray-500 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-600 hover:text-white dark:hover:bg-emerald-500 dark:hover:text-white p-1.5 rounded-md shadow-sm transition-all duration-200"
                 >
                   <Copy size={14} />
                 </button>
               )}
-              
+
               <div className="pr-8">{block.text}</div>
             </div>
           ))}

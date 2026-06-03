@@ -176,12 +176,12 @@ export default function TimeEntryRow({
     debouncedUpdate(updated);
   };
 
-  const rowBg = index % 2 === 0 ? "bg-white" : "bg-gray-50";
+  const rowBg = index % 2 === 0 ? "bg-white dark:bg-gray-800" : "bg-gray-50 dark:bg-gray-900/50";
   const { totalMinutes, finalTime } = calculateTotals(localHrs, localMin);
 
   return (
-    <tr className={`${rowBg} hover:bg-emerald-50/50 transition-all duration-200 animate-fadeIn`}>
-      <td className="px-3 py-3 border-r border-gray-200">
+    <tr className={`${rowBg} hover:bg-emerald-50/50 dark:hover:bg-emerald-900/20 transition-all duration-200 animate-fadeIn`}>
+      <td className="px-3 py-3 border-r border-gray-200 dark:border-gray-700">
         <input
           type="text"
           value={localEntry.date || ""}
@@ -189,20 +189,20 @@ export default function TimeEntryRow({
             setLocalEntry({ ...localEntry, date: e.target.value });
             triggerUpdate("date", e.target.value);
           }}
-          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white transition-all duration-200"
+          className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all duration-200"
           placeholder="DD/MM/YYYY"
           disabled={readOnly}
         />
       </td>
 
-      <td className="px-3 py-3 border-r border-gray-200">
+      <td className="px-3 py-3 border-r border-gray-200 dark:border-gray-700">
         {readOnly ? (
           localEntry.cuLink ? (
-            <a href={localEntry.cuLink} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline text-xs break-all">
+            <a href={localEntry.cuLink} target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 underline text-xs break-all">
               {localEntry.cuLink}
             </a>
           ) : (
-            <span className="text-xs text-gray-400">-</span>
+            <span className="text-xs text-gray-400 dark:text-gray-500">-</span>
           )
         ) : (
           <input
@@ -212,28 +212,28 @@ export default function TimeEntryRow({
               setLocalEntry({ ...localEntry, cuLink: e.target.value });
               triggerUpdate("cuLink", e.target.value);
             }}
-            className="w-full px-2 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white transition-all duration-200"
+            className="w-full px-2 py-2 text-xs border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all duration-200"
             placeholder="Paste CU Link..."
             disabled={readOnly}
           />
         )}
       </td>
 
-      <td className="px-3 py-3 border-r border-gray-200">
+      <td className="px-3 py-3 border-r border-gray-200 dark:border-gray-700">
         <textarea
           value={localEntry.task || ""}
           onChange={(e) => {
             setLocalEntry({ ...localEntry, task: e.target.value });
             triggerUpdate("task", e.target.value);
           }}
-          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white resize-none transition-all duration-200"
+          className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 resize-none transition-all duration-200"
           placeholder="Enter task description..."
           rows={2}
           disabled={readOnly}
         />
       </td>
 
-      <td className="px-3 py-3 border-r border-gray-200">
+      <td className="px-3 py-3 border-r border-gray-200 dark:border-gray-700">
         <input
           type="text"
           inputMode="numeric"
@@ -241,12 +241,12 @@ export default function TimeEntryRow({
           onChange={(e) => handleNumericChange("hrs", e.target.value)}
           onBlur={() => handleBlur("hrs")}
           onKeyDown={(e) => handleKeyDown("hrs", e)}
-          className="w-full px-2 py-2 text-sm text-center border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white transition-all duration-200"
+          className="w-full px-2 py-2 text-sm text-center border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all duration-200"
           disabled={readOnly}
         />
       </td>
 
-      <td className="px-3 py-3 border-r border-gray-200">
+      <td className="px-3 py-3 border-r border-gray-200 dark:border-gray-700">
         <input
           type="text"
           inputMode="numeric"
@@ -254,22 +254,22 @@ export default function TimeEntryRow({
           onChange={(e) => handleNumericChange("min", e.target.value)}
           onBlur={() => handleBlur("min")}
           onKeyDown={(e) => handleKeyDown("min", e)}
-          className="w-full px-2 py-2 text-sm text-center border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white transition-all duration-200"
+          className="w-full px-2 py-2 text-sm text-center border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all duration-200"
           disabled={readOnly}
         />
       </td>
 
-      <td className="px-3 py-3 text-center border-r border-gray-200">
-        <span className="text-sm font-semibold text-gray-700">{totalMinutes}</span>
+      <td className="px-3 py-3 text-center border-r border-gray-200 dark:border-gray-700">
+        <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{totalMinutes}</span>
       </td>
 
-      <td className="px-3 py-3 text-center border-r border-gray-200">
-        <span className="text-sm font-bold text-emerald-600">{finalTime}</span>
+      <td className="px-3 py-3 text-center border-r border-gray-200 dark:border-gray-700">
+        <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">{finalTime}</span>
       </td>
 
-      <td className="px-3 py-3 border-r border-gray-200">
+      <td className="px-3 py-3 border-r border-gray-200 dark:border-gray-700">
         {readOnly ? (
-          <span className="text-sm text-gray-600">{safeType || "-"}</span>
+          <span className="text-sm text-gray-600 dark:text-gray-400">{safeType || "-"}</span>
         ) : (
           <Select
             value={safeType || undefined}
@@ -336,9 +336,9 @@ export default function TimeEntryRow({
         )}
       </td>
 
-      <td className="px-3 py-3 border-r border-gray-200">
+      <td className="px-3 py-3 border-r border-gray-200 dark:border-gray-700">
         {readOnly ? (
-          <span className="text-sm text-gray-600">{safeStatus || "-"}</span>
+          <span className="text-sm text-gray-600 dark:text-gray-400">{safeStatus || "-"}</span>
         ) : (
           <Select
             value={safeStatus || undefined}
@@ -405,9 +405,9 @@ export default function TimeEntryRow({
         )}
       </td>
 
-      <td className="px-3 py-3 border-r border-gray-200">
+      <td className="px-3 py-3 border-r border-gray-200 dark:border-gray-700">
         {readOnly ? (
-          <span className="text-sm text-gray-600">{safeBugType || "-"}</span>
+          <span className="text-sm text-gray-600 dark:text-gray-400">{safeBugType || "-"}</span>
         ) : (
           <Select
             value={safeBugType || undefined}
@@ -474,7 +474,7 @@ export default function TimeEntryRow({
         )}
       </td>
 
-      <td className="px-3 py-3 text-center border-r border-gray-200">
+      <td className="px-3 py-3 text-center border-r border-gray-200 dark:border-gray-700">
         <label className="inline-flex items-center justify-center cursor-pointer">
           <input
             type="checkbox"
@@ -487,7 +487,7 @@ export default function TimeEntryRow({
             className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all duration-200 ${
               localEntry.isValid === true
                 ? "bg-emerald-500 border-emerald-500 scale-110 shadow-md"
-                : "border-gray-300 hover:border-emerald-400 hover:scale-105"
+                : "border-gray-300 dark:border-gray-600 hover:border-emerald-400 hover:scale-105"
             } ${readOnly ? "opacity-60 cursor-not-allowed" : ""}`}
           >
             {localEntry.isValid === true && (
@@ -499,7 +499,7 @@ export default function TimeEntryRow({
         </label>
       </td>
 
-      <td className="px-3 py-3 text-center border-r border-gray-200">
+      <td className="px-3 py-3 text-center border-r border-gray-200 dark:border-gray-700">
         <label className="inline-flex items-center justify-center cursor-pointer">
           <input
             type="checkbox"
@@ -512,7 +512,7 @@ export default function TimeEntryRow({
             className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all duration-200 ${
               localEntry.isValid === false
                 ? "bg-red-500 border-red-500 scale-110 shadow-md"
-                : "border-gray-300 hover:border-red-400 hover:scale-105"
+                : "border-gray-300 dark:border-gray-600 hover:border-red-400 hover:scale-105"
             } ${readOnly ? "opacity-60 cursor-not-allowed" : ""}`}
           >
             {localEntry.isValid === false && (
@@ -528,7 +528,7 @@ export default function TimeEntryRow({
         <td className="px-3 py-3 text-center">
           <button
             onClick={() => onDelete(entry.id)}
-            className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all duration-200 hover:scale-110"
+            className="p-2 text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-all duration-200 hover:scale-110"
             title="Delete task"
           >
             <Trash2 size={16} />

@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { Toaster } from "react-hot-toast";
-import { ConfigProvider, DatePicker, message, Popconfirm } from "antd";
+import { ConfigProvider, DatePicker, message, Popconfirm, theme as antdThemeLib } from "antd";
 import dayjs from "dayjs";
-import { Calendar, ChevronLeft, ChevronRight, LogOut } from "lucide-react";
+import { Calendar, ChevronLeft, ChevronRight, LogOut, Moon, Sun } from "lucide-react";
 
 import Dashboard from "./components/Dashboard";
 import Sidebar from "./components/Sidebar";
@@ -37,6 +37,19 @@ function App() {
     return new Date().toISOString().split("T")[0];
   });
   const [isSwapping, setIsSwapping] = useState(false);
+
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    return localStorage.getItem("dark-mode") === "true";
+  });
+
+  useEffect(() => {
+    localStorage.setItem("dark-mode", isDarkMode);
+    if (isDarkMode) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [isDarkMode]);
 
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem("app-theme") || "emerald";
@@ -91,11 +104,14 @@ function App() {
   const isLoading = tasksLoading || discussionLoading || testingLoading || optionsLoading;
 
   const antdTheme = {
+    algorithm: isDarkMode ? antdThemeLib.darkAlgorithm : antdThemeLib.defaultAlgorithm,
     token: {
       colorPrimary: "#10b981",
       borderRadius: 8,
       fontSize: 14,
       controlHeight: 36,
+      colorBgBase: isDarkMode ? "#1f2937" : "#ffffff",
+      colorTextBase: isDarkMode ? "#f3f4f6" : "#1f2937",
     },
     components: {
       Select: {
@@ -246,7 +262,7 @@ function App() {
 
   return (
     <ConfigProvider theme={antdTheme}>
-      <div className="min-h-screen bg-gray-100">
+      <div className="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
         <Toaster
           position="top-right"
           toastOptions={{
@@ -284,23 +300,23 @@ function App() {
 
         <main className={`transition-all duration-300 flex flex-col ${isSidebarOpen ? "ml-60" : "ml-16"}`}>
           {/* Global Top Header */}
-          <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between sticky top-0 z-40 shadow-sm">
+          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 px-6 py-3 flex items-center justify-between sticky top-0 z-40 shadow-sm transition-colors duration-300">
             <div className="flex items-center gap-4">
-              <div className="flex items-center bg-gray-100 rounded-lg p-1 border border-gray-200">
+              <div className="flex items-center bg-gray-100 dark:bg-gray-900 rounded-lg p-1 border border-gray-200 dark:border-gray-700 transition-colors duration-300">
                 <button 
                   onClick={() => changeDay(-1)}
-                  className="px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-emerald-600 hover:bg-white rounded transition-all"
+                  className="px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-white dark:hover:bg-gray-800 rounded transition-all"
                 >
                   Yesterday
                 </button>
-                <div className="w-px h-4 bg-gray-300 mx-1"></div>
+                <div className="w-px h-4 bg-gray-300 dark:bg-gray-700 mx-1"></div>
                 <button 
                   onClick={setToday}
-                  className={`px-3 py-1.5 text-sm font-medium rounded transition-all ${activeDate === new Date().toISOString().split("T")[0] ? "bg-emerald-600 text-white shadow" : "text-gray-600 hover:text-emerald-600 hover:bg-white"}`}
+                  className={`px-3 py-1.5 text-sm font-medium rounded transition-all ${activeDate === new Date().toISOString().split("T")[0] ? "bg-emerald-600 text-white shadow" : "text-gray-600 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-white dark:hover:bg-gray-800"}`}
                 >
                   Today
                 </button>
-                <div className="w-px h-4 bg-gray-300 mx-1"></div>
+                <div className="w-px h-4 bg-gray-300 dark:bg-gray-700 mx-1"></div>
                 <button 
                   onClick={() => changeDay(1)}
                   className="px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-emerald-600 hover:bg-white rounded transition-all"
@@ -311,7 +327,16 @@ function App() {
             </div>
 
             <div className="flex items-center gap-3">
-              <span className="text-sm font-medium text-gray-500">Active Workspace:</span>
+              <button
+                onClick={() => setIsDarkMode(!isDarkMode)}
+                className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-gray-600 dark:text-gray-300"
+                title="Toggle Dark Mode"
+              >
+                {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
+              </button>
+              <div className="w-px h-6 bg-gray-300 dark:bg-gray-700 mx-1"></div>
+
+              <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Active Workspace:</span>
               <DatePicker 
                 value={dayjs(activeDate)} 
                 onChange={(date) => {
@@ -320,7 +345,7 @@ function App() {
                 allowClear={false}
                 className="w-40"
               />
-              <div className="w-px h-6 bg-gray-300 mx-1"></div>
+              <div className="w-px h-6 bg-gray-300 dark:bg-gray-700 mx-1"></div>
               <Popconfirm
                 title="Log Out"
                 description="Are you sure you want to log out?"
