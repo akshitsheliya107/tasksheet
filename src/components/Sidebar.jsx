@@ -17,14 +17,13 @@ export default function Sidebar({
   const menuItems = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
     { id: "history", label: "History", icon: History },
-    { id: "settings", label: "Settings", icon: Settings },
+    // { id: "settings", label: "Settings", icon: Settings },
   ];
 
   return (
     <aside
-      className={`fixed left-0 top-0 h-full bg-gradient-to-b from-gray-900 to-gray-800 text-white transition-all duration-300 z-40 shadow-2xl ${
-        isOpen ? "w-60" : "w-16"
-      }`}
+      className={`fixed left-0 top-0 h-full bg-gradient-to-b from-gray-900 to-gray-800 text-white transition-all duration-300 z-40 shadow-2xl ${isOpen ? "w-60" : "w-16"
+        }`}
     >
       <div className="h-16 flex items-center gap-3 px-4 border-b border-gray-700">
         <div className="w-9 h-9 bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg">
@@ -53,11 +52,10 @@ export default function Sidebar({
             <button
               key={item.id}
               onClick={() => onViewChange(item.id)}
-              className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 ${
-                isActive
+              className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 ${isActive
                   ? "bg-emerald-600 text-white shadow-lg scale-105"
                   : "text-gray-400 hover:bg-gray-800 hover:text-white hover:scale-105"
-              }`}
+                }`}
             >
               <Icon size={20} />
               {isOpen && (

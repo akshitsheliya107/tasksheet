@@ -293,25 +293,25 @@ export default function Dashboard({
 
           return (
             <div key={cat} className={`rounded-xl p-4 border-2 ${colors[cat]} flex flex-col justify-between transition-all duration-200 hover:shadow-md`}>
-              <div className="font-bold text-gray-800 dark:text-gray-200 mb-3 uppercase text-xs tracking-wider flex items-center justify-between border-b border-gray-200 dark:border-gray-700/50 pb-2">
+              <div className="font-bold text-gray-800 dark:text-gray-200 mb-3 uppercase text-sm tracking-wider flex items-center justify-between border-b border-gray-200 dark:border-gray-700/50 pb-2">
                 <span>{titles[cat]}</span>
-                <span className="bg-white dark:bg-gray-800 px-2 py-0.5 rounded-full text-[10px] text-gray-500 dark:text-gray-400 font-bold border border-gray-200 dark:border-gray-700">
+                <span className="bg-white dark:bg-gray-800 px-2.5 py-1 rounded-full text-sm text-gray-600 dark:text-gray-300 font-bold border border-gray-200 dark:border-gray-700 shadow-sm">
                   TOTAL: {data.count}
                 </span>
               </div>
-              <div className="flex justify-between items-center bg-white/70 dark:bg-gray-800/50 p-2.5 rounded-lg mb-2 shadow-sm border border-white dark:border-gray-700">
-                <div className="flex items-center gap-1.5">
-                  <CheckCircle size={14} className="text-emerald-500" />
-                  <span className="text-xs font-bold text-gray-600 dark:text-gray-300">VALID <span className="text-[10px] text-gray-400 dark:text-gray-500">({data.validCount})</span></span>
+              <div className="flex justify-between items-center bg-white/70 dark:bg-gray-800/50 p-3 rounded-lg mb-2 shadow-sm border border-white dark:border-gray-700">
+                <div className="flex items-center gap-2">
+                  <CheckCircle size={18} className="text-emerald-500" />
+                  <span className="text-sm font-bold text-gray-700 dark:text-gray-200">VALID <span className="text-lg text-gray-500 dark:text-gray-400">({data.validCount})</span></span>
                 </div>
-                <span className="font-bold text-emerald-600 dark:text-emerald-400">{data.validTime.toFixed(2)}<span className="text-[10px] ml-0.5 text-gray-500 dark:text-gray-400">h</span></span>
+                <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400">{data.validTime.toFixed(2)}<span className="text-sm ml-0.5 text-gray-500 dark:text-gray-400">h</span></span>
               </div>
-              <div className="flex justify-between items-center bg-white/70 dark:bg-gray-800/50 p-2.5 rounded-lg shadow-sm border border-white dark:border-gray-700">
-                <div className="flex items-center gap-1.5">
-                  <XCircle size={14} className="text-red-500" />
-                  <span className="text-xs font-bold text-gray-600 dark:text-gray-300">INVALID <span className="text-[10px] text-gray-400 dark:text-gray-500">({data.invalidCount})</span></span>
+              <div className="flex justify-between items-center bg-white/70 dark:bg-gray-800/50 p-3 rounded-lg shadow-sm border border-white dark:border-gray-700">
+                <div className="flex items-center gap-2">
+                  <XCircle size={18} className="text-red-500" />
+                  <span className="text-sm font-bold text-gray-700 dark:text-gray-200">INVALID <span className="text-lg text-gray-500 dark:text-gray-400">({data.invalidCount})</span></span>
                 </div>
-                <span className="font-bold text-red-600 dark:text-red-400">{data.invalidTime.toFixed(2)}<span className="text-[10px] ml-0.5 text-gray-500 dark:text-gray-400">h</span></span>
+                <span className="text-lg font-bold text-red-600 dark:text-red-400">{data.invalidTime.toFixed(2)}<span className="text-sm ml-0.5 text-gray-500 dark:text-gray-400">h</span></span>
               </div>
             </div>
           );
