@@ -1,12 +1,23 @@
+import { initialTypeOptions, initialStatusOptions, initialBugTypeOptions } from "../data";
+
+let currentUserId = "";
+
+export const setUserId = (uid) => {
+  currentUserId = uid;
+};
+
+const getKey = (key) => {
+  return currentUserId ? `${currentUserId}_${key}` : key;
+};
 
 const TASKS_KEY = "tasks";
 
 function getTasksFromLS() {
-  return JSON.parse(localStorage.getItem(TASKS_KEY) || "[]");
+  return JSON.parse(localStorage.getItem(getKey(TASKS_KEY)) || "[]");
 }
 
 function setTasksToLS(tasks) {
-  localStorage.setItem(TASKS_KEY, JSON.stringify(tasks));
+  localStorage.setItem(getKey(TASKS_KEY), JSON.stringify(tasks));
 }
 
 export const tasksAPI = {
@@ -109,7 +120,7 @@ const DISCUSSION_KEY = "discussion";
 
 export const discussionAPI = {
   async get() {
-    let discussion = JSON.parse(localStorage.getItem(DISCUSSION_KEY));
+    let discussion = JSON.parse(localStorage.getItem(getKey(DISCUSSION_KEY)));
     if (!discussion) {
       discussion = {
         id: 1,
@@ -117,14 +128,14 @@ export const discussionAPI = {
         min: 0,
         note: "General discussion / meetings / calls",
       };
-      localStorage.setItem(DISCUSSION_KEY, JSON.stringify(discussion));
+      localStorage.setItem(getKey(DISCUSSION_KEY), JSON.stringify(discussion));
     }
     return discussion;
   },
 
   async update(id, discussion) {
     const updated = { ...discussion, id };
-    localStorage.setItem(DISCUSSION_KEY, JSON.stringify(updated));
+    localStorage.setItem(getKey(DISCUSSION_KEY), JSON.stringify(updated));
     return updated;
   },
 };
@@ -135,7 +146,7 @@ const BUGS_KEY = "bugs";
 
 export const testingAPI = {
   async get() {
-    let testing = JSON.parse(localStorage.getItem(TESTING_KEY));
+    let testing = JSON.parse(localStorage.getItem(getKey(TESTING_KEY)));
     if (!testing) {
       testing = {
         id: 1,
@@ -145,16 +156,16 @@ export const testingAPI = {
         test_case_scenario: "",
         bug_founded_module: "",
       };
-      localStorage.setItem(TESTING_KEY, JSON.stringify(testing));
+      localStorage.setItem(getKey(TESTING_KEY), JSON.stringify(testing));
     }
-    const bugs = JSON.parse(localStorage.getItem(BUGS_KEY) || "[]").filter(
+    const bugs = JSON.parse(localStorage.getItem(getKey(BUGS_KEY)) || "[]").filter(
       (b) => b.testing_id === testing.id
     );
     return { ...testing, bugs };
   },
 
   async update(id, testing) {
-    const current = JSON.parse(localStorage.getItem(TESTING_KEY) || "{}");
+    const current = JSON.parse(localStorage.getItem(getKey(TESTING_KEY)) || "{}");
     const updated = {
       ...current,
       id,
@@ -164,7 +175,7 @@ export const testingAPI = {
       test_case_scenario: testing.testCaseScenario ?? testing.test_case_scenario ?? "",
       bug_founded_module: testing.bugFoundedModule ?? testing.bug_founded_module ?? "",
     };
-    localStorage.setItem(TESTING_KEY, JSON.stringify(updated));
+    localStorage.setItem(getKey(TESTING_KEY), JSON.stringify(updated));
     return updated;
   },
 };
@@ -172,25 +183,25 @@ export const testingAPI = {
 // ============ BUGS API (localStorage) ============
 export const bugsAPI = {
   async create(testingId, bug) {
-    let bugs = JSON.parse(localStorage.getItem(BUGS_KEY) || "[]");
+    let bugs = JSON.parse(localStorage.getItem(getKey(BUGS_KEY)) || "[]");
     const id = Date.now();
     const newBug = { ...bug, id, testing_id: testingId };
     bugs.push(newBug);
-    localStorage.setItem(BUGS_KEY, JSON.stringify(bugs));
+    localStorage.setItem(getKey(BUGS_KEY), JSON.stringify(bugs));
     return newBug;
   },
 
   async update(id, bug) {
-    let bugs = JSON.parse(localStorage.getItem(BUGS_KEY) || "[]");
+    let bugs = JSON.parse(localStorage.getItem(getKey(BUGS_KEY)) || "[]");
     bugs = bugs.map((b) => (b.id === id ? { ...b, ...bug } : b));
-    localStorage.setItem(BUGS_KEY, JSON.stringify(bugs));
+    localStorage.setItem(getKey(BUGS_KEY), JSON.stringify(bugs));
     return bugs.find((b) => b.id === id);
   },
 
   async delete(id) {
-    let bugs = JSON.parse(localStorage.getItem(BUGS_KEY) || "[]");
+    let bugs = JSON.parse(localStorage.getItem(getKey(BUGS_KEY)) || "[]");
     bugs = bugs.filter((b) => b.id !== id);
-    localStorage.setItem(BUGS_KEY, JSON.stringify(bugs));
+    localStorage.setItem(getKey(BUGS_KEY), JSON.stringify(bugs));
     return true;
   },
 };
@@ -200,73 +211,79 @@ const TYPE_OPTIONS_KEY = "type_options";
 const STATUS_OPTIONS_KEY = "status_options";
 const BUG_TYPE_OPTIONS_KEY = "bug_type_options";
 
-function getOptionsFromLS(key) {
-  return JSON.parse(localStorage.getItem(key) || "[]");
+function getOptionsFromLS(key, initialData) {
+  const data = localStorage.getItem(getKey(key));
+  if (!data) {
+    const options = initialData.map((name, i) => ({ id: Date.now() + i, name }));
+    setOptionsToLS(key, options);
+    return options;
+  }
+  return JSON.parse(data);
 }
 
 function setOptionsToLS(key, options) {
-  localStorage.setItem(key, JSON.stringify(options));
+  localStorage.setItem(getKey(key), JSON.stringify(options));
 }
 
 export const optionsAPI = {
-  async getTypeOptions() { return getOptionsFromLS(TYPE_OPTIONS_KEY); },
+  async getTypeOptions() { return getOptionsFromLS(TYPE_OPTIONS_KEY, initialTypeOptions); },
   async addTypeOption(name) {
-    const options = getOptionsFromLS(TYPE_OPTIONS_KEY);
+    const options = getOptionsFromLS(TYPE_OPTIONS_KEY, initialTypeOptions);
     const newOption = { id: Date.now(), name };
     options.push(newOption);
     setOptionsToLS(TYPE_OPTIONS_KEY, options);
     return newOption;
   },
   async updateTypeOption(id, name) {
-    let options = getOptionsFromLS(TYPE_OPTIONS_KEY);
+    let options = getOptionsFromLS(TYPE_OPTIONS_KEY, initialTypeOptions);
     options = options.map((o) => (o.id === id ? { ...o, name } : o));
     setOptionsToLS(TYPE_OPTIONS_KEY, options);
     return options.find((o) => o.id === id);
   },
   async deleteTypeOption(id) {
-    let options = getOptionsFromLS(TYPE_OPTIONS_KEY);
+    let options = getOptionsFromLS(TYPE_OPTIONS_KEY, initialTypeOptions);
     options = options.filter((o) => o.id !== id);
     setOptionsToLS(TYPE_OPTIONS_KEY, options);
     return true;
   },
 
-  async getStatusOptions() { return getOptionsFromLS(STATUS_OPTIONS_KEY); },
+  async getStatusOptions() { return getOptionsFromLS(STATUS_OPTIONS_KEY, initialStatusOptions); },
   async addStatusOption(name) {
-    const options = getOptionsFromLS(STATUS_OPTIONS_KEY);
+    const options = getOptionsFromLS(STATUS_OPTIONS_KEY, initialStatusOptions);
     const newOption = { id: Date.now(), name };
     options.push(newOption);
     setOptionsToLS(STATUS_OPTIONS_KEY, options);
     return newOption;
   },
   async updateStatusOption(id, name) {
-    let options = getOptionsFromLS(STATUS_OPTIONS_KEY);
+    let options = getOptionsFromLS(STATUS_OPTIONS_KEY, initialStatusOptions);
     options = options.map((o) => (o.id === id ? { ...o, name } : o));
     setOptionsToLS(STATUS_OPTIONS_KEY, options);
     return options.find((o) => o.id === id);
   },
   async deleteStatusOption(id) {
-    let options = getOptionsFromLS(STATUS_OPTIONS_KEY);
+    let options = getOptionsFromLS(STATUS_OPTIONS_KEY, initialStatusOptions);
     options = options.filter((o) => o.id !== id);
     setOptionsToLS(STATUS_OPTIONS_KEY, options);
     return true;
   },
 
-  async getBugTypeOptions() { return getOptionsFromLS(BUG_TYPE_OPTIONS_KEY); },
+  async getBugTypeOptions() { return getOptionsFromLS(BUG_TYPE_OPTIONS_KEY, initialBugTypeOptions); },
   async addBugTypeOption(name) {
-    const options = getOptionsFromLS(BUG_TYPE_OPTIONS_KEY);
+    const options = getOptionsFromLS(BUG_TYPE_OPTIONS_KEY, initialBugTypeOptions);
     const newOption = { id: Date.now(), name };
     options.push(newOption);
     setOptionsToLS(BUG_TYPE_OPTIONS_KEY, options);
     return newOption;
   },
   async updateBugTypeOption(id, name) {
-    let options = getOptionsFromLS(BUG_TYPE_OPTIONS_KEY);
+    let options = getOptionsFromLS(BUG_TYPE_OPTIONS_KEY, initialBugTypeOptions);
     options = options.map((o) => (o.id === id ? { ...o, name } : o));
     setOptionsToLS(BUG_TYPE_OPTIONS_KEY, options);
     return options.find((o) => o.id === id);
   },
   async deleteBugTypeOption(id) {
-    let options = getOptionsFromLS(BUG_TYPE_OPTIONS_KEY);
+    let options = getOptionsFromLS(BUG_TYPE_OPTIONS_KEY, initialBugTypeOptions);
     options = options.filter((o) => o.id !== id);
     setOptionsToLS(BUG_TYPE_OPTIONS_KEY, options);
     return true;
@@ -278,17 +295,17 @@ const SNAPSHOTS_KEY = "daily_snapshots";
 
 export const snapshotsAPI = {
   async getAll() {
-    return JSON.parse(localStorage.getItem(SNAPSHOTS_KEY) || "[]");
+    return JSON.parse(localStorage.getItem(getKey(SNAPSHOTS_KEY)) || "[]");
   },
 
   async getByDate(date) {
-    const snapshots = JSON.parse(localStorage.getItem(SNAPSHOTS_KEY) || "[]");
+    const snapshots = JSON.parse(localStorage.getItem(getKey(SNAPSHOTS_KEY)) || "[]");
     return snapshots.find((s) => s.snapshot_date === date) || null;
   },
 
   async save(snapshotData, customDate) {
     const targetDate = customDate || new Date().toISOString().split("T")[0];
-    let snapshots = JSON.parse(localStorage.getItem(SNAPSHOTS_KEY) || "[]");
+    let snapshots = JSON.parse(localStorage.getItem(getKey(SNAPSHOTS_KEY)) || "[]");
     let existing = snapshots.find((s) => s.snapshot_date === targetDate);
 
     if (existing) {
@@ -312,14 +329,43 @@ export const snapshotsAPI = {
       snapshots.push(existing);
     }
 
-    localStorage.setItem(SNAPSHOTS_KEY, JSON.stringify(snapshots));
+    localStorage.setItem(getKey(SNAPSHOTS_KEY), JSON.stringify(snapshots));
     return existing;
   },
 
   async delete(id) {
-    let snapshots = JSON.parse(localStorage.getItem(SNAPSHOTS_KEY) || "[]");
+    let snapshots = JSON.parse(localStorage.getItem(getKey(SNAPSHOTS_KEY)) || "[]");
     snapshots = snapshots.filter((s) => s.id !== id);
-    localStorage.setItem(SNAPSHOTS_KEY, JSON.stringify(snapshots));
+    localStorage.setItem(getKey(SNAPSHOTS_KEY), JSON.stringify(snapshots));
     return true;
   },
+};
+
+// ============ WORKSPACE API (localStorage swap) ============
+export const workspaceAPI = {
+  async loadWorkspace(date) {
+    const snap = await snapshotsAPI.getByDate(date);
+    if (snap) {
+      localStorage.setItem(getKey(TASKS_KEY), JSON.stringify(snap.tasks_data || []));
+      localStorage.setItem(getKey(DISCUSSION_KEY), JSON.stringify(snap.discussion_data || {}));
+      
+      const testData = snap.testing_data || {};
+      const bugs = testData.bugs || [];
+      const testWithoutBugs = { ...testData };
+      delete testWithoutBugs.bugs;
+
+      localStorage.setItem(getKey(TESTING_KEY), JSON.stringify(testWithoutBugs));
+      localStorage.setItem(getKey(BUGS_KEY), JSON.stringify(bugs));
+    } else {
+      localStorage.setItem(getKey(TASKS_KEY), JSON.stringify([]));
+      localStorage.setItem(getKey(DISCUSSION_KEY), JSON.stringify({
+        id: 1, hrs: 0, min: 0, note: "General discussion / meetings / calls"
+      }));
+      localStorage.setItem(getKey(TESTING_KEY), JSON.stringify({
+        id: 1, testing_hrs: 0, testing_min: 0, testing_module: "", test_case_scenario: "", bug_founded_module: ""
+      }));
+      localStorage.setItem(getKey(BUGS_KEY), JSON.stringify([]));
+    }
+    return true;
+  }
 };

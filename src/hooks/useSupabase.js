@@ -159,7 +159,7 @@ export function useDiscussion() {
     fetchDiscussion();
   }, [fetchDiscussion]);
 
-  return { discussion, loading, updateDiscussion, setDiscussion };
+  return { discussion, loading, fetchDiscussion, updateDiscussion, setDiscussion };
 }
 
 export function useTesting() {
@@ -250,6 +250,7 @@ export function useTesting() {
   return {
     testing,
     loading,
+    fetchTesting,
     updateTesting,
     addBug,
     updateBug,
@@ -415,9 +416,9 @@ export function useSnapshots() {
     }
   };
 
-  const saveSnapshot = async (data) => {
+  const saveSnapshot = async (data, customDate) => {
     try {
-      await snapshotsAPI.save(data);
+      await snapshotsAPI.save(data, customDate);
       await fetchSnapshots();
     } catch (err) {
       toast.error("Failed to save report");

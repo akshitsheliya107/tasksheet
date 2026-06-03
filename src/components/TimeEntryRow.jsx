@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
-import { Trash2 } from "lucide-react";
-import { Select } from "antd";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { Trash2, Plus } from "lucide-react";
+import { Select, Divider, Input, Button, Space, Modal } from "antd";
 import debounce from "lodash.debounce";
 
 export default function TimeEntryRow({
@@ -12,16 +12,66 @@ export default function TimeEntryRow({
   typeOptions = [],
   statusOptions = [],
   bugTypeOptions = [],
+  onAddTypeOption,
+  onDeleteTypeOption,
+  onAddStatusOption,
+  onDeleteStatusOption,
+  onAddBugTypeOption,
+  onDeleteBugTypeOption,
 }) {
   const [localHrs, setLocalHrs] = useState(String(entry.hrs || 0));
   const [localMin, setLocalMin] = useState(String(entry.min || 0));
   const [localEntry, setLocalEntry] = useState(entry);
+  
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalType, setModalType] = useState("");
+  const [newOptionValue, setNewOptionValue] = useState("");
+  const inputRef = useRef(null);
 
   useEffect(() => {
-    setLocalEntry(entry);
+    if (isModalOpen && inputRef.current) {
+      setTimeout(() => {
+        inputRef.current.focus();
+      }, 100); // small delay to wait for modal animation
+    }
+  }, [isModalOpen]);
+
+  const handleAddOption = async () => {
+    const trimmedVal = newOptionValue.trim();
+    if (!trimmedVal) return;
+    
+    if (modalType === "type") {
+      await onAddTypeOption(trimmedVal);
+      setLocalEntry(prev => ({ ...prev, type: trimmedVal }));
+      triggerUpdate("type", trimmedVal);
+    } else if (modalType === "status") {
+      await onAddStatusOption(trimmedVal);
+      setLocalEntry(prev => ({ ...prev, status: trimmedVal }));
+      triggerUpdate("status", trimmedVal);
+    } else if (modalType === "bugType") {
+      await onAddBugTypeOption(trimmedVal);
+      setLocalEntry(prev => ({ ...prev, bugType: trimmedVal }));
+      triggerUpdate("bugType", trimmedVal);
+    }
+    
+    setNewOptionValue("");
+    setIsModalOpen(false);
+  };
+
+  useEffect(() => {
+    setLocalEntry({
+      ...entry,
+      type: typeof entry.type === 'object' ? entry.type?.name : entry.type,
+      status: typeof entry.status === 'object' ? entry.status?.name : entry.status,
+      bugType: typeof entry.bugType === 'object' ? entry.bugType?.name : entry.bugType,
+    });
     setLocalHrs(String(entry.hrs || 0));
     setLocalMin(String(entry.min || 0));
   }, [entry]);
+
+  const safeType = typeof localEntry.type === 'object' ? localEntry.type?.name : localEntry.type;
+  const safeStatus = typeof localEntry.status === 'object' ? localEntry.status?.name : localEntry.status;
+  const safeBugType = typeof localEntry.bugType === 'object' ? localEntry.bugType?.name : localEntry.bugType;
 
   const calculateTotals = (hrs, min) => {
     const h = Number(hrs) || 0;
@@ -31,7 +81,6 @@ export default function TimeEntryRow({
     return { totalMinutes, finalTime };
   };
 
-  // ✅ FIXED: Increased debounce to 600ms to prevent UI freezing during typing/pasting
   const debouncedUpdate = useCallback(
     debounce((updatedEntry) => {
       if (!readOnly && onUpdate) {
@@ -146,7 +195,6 @@ export default function TimeEntryRow({
         />
       </td>
 
-      {/* ✅ FIXED: Lag-free CU Link input */}
       <td className="px-3 py-3 border-r border-gray-200">
         {readOnly ? (
           localEntry.cuLink ? (
@@ -171,7 +219,6 @@ export default function TimeEntryRow({
         )}
       </td>
 
-      {/* ✅ FIXED: Lag-free Task Description input */}
       <td className="px-3 py-3 border-r border-gray-200">
         <textarea
           value={localEntry.task || ""}
@@ -222,10 +269,10 @@ export default function TimeEntryRow({
 
       <td className="px-3 py-3 border-r border-gray-200">
         {readOnly ? (
-          <span className="text-sm text-gray-600">{localEntry.type || "-"}</span>
+          <span className="text-sm text-gray-600">{safeType || "-"}</span>
         ) : (
           <Select
-            value={localEntry.type || undefined}
+            value={safeType || undefined}
             onChange={(val) => {
               setLocalEntry({ ...localEntry, type: val });
               triggerUpdate("type", val);
@@ -235,21 +282,66 @@ export default function TimeEntryRow({
             size="middle"
             allowClear
             showSearch
-            optionFilterProp="children"
-          >
-            {typeOptions.map((option) => (
-              <Select.Option key={option} value={option}>{option}</Select.Option>
-            ))}
-          </Select>
+            optionFilterProp="label"
+            options={(typeOptions || []).map((opt) => ({
+              label: (
+                <div className="flex justify-between items-center group">
+                  <span>{opt.name || opt}</span>
+                  {opt.id && (
+                    <Trash2 
+                      size={14} 
+                      className="text-red-400 opacity-0 group-hover:opacity-100 hover:text-red-600 transition-opacity" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        Modal.confirm({
+                          title: 'Delete Option',
+                          content: `Are you sure you want to delete "${opt.name || opt}"?`,
+                          okText: 'Delete',
+                          cancelText: 'Cancel',
+                          okType: 'danger',
+                          centered: true,
+                          onOk: () => onDeleteTypeOption(opt.id)
+                        });
+                      }}
+                    />
+                  )}
+                </div>
+              ),
+              value: opt.name || opt,
+              searchLabel: opt.name || opt
+            }))}
+            filterOption={(input, option) =>
+              (option?.searchLabel ?? '').toLowerCase().includes(input.toLowerCase())
+            }
+            dropdownRender={(menu) => (
+              <>
+                {menu}
+                <Divider style={{ margin: '4px 0' }} />
+                <Button 
+                  type="text" 
+                  icon={<Plus size={14}/>} 
+                  className="w-full text-left flex items-center gap-2 justify-start px-3 py-1.5 hover:text-emerald-600 font-medium"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setModalType("type");
+                    setNewOptionValue("");
+                    setIsModalOpen(true);
+                  }}
+                >
+                  Add new type option
+                </Button>
+              </>
+            )}
+          />
         )}
       </td>
 
       <td className="px-3 py-3 border-r border-gray-200">
         {readOnly ? (
-          <span className="text-sm text-gray-600">{localEntry.status || "-"}</span>
+          <span className="text-sm text-gray-600">{safeStatus || "-"}</span>
         ) : (
           <Select
-            value={localEntry.status || undefined}
+            value={safeStatus || undefined}
             onChange={(val) => {
               setLocalEntry({ ...localEntry, status: val });
               triggerUpdate("status", val);
@@ -259,21 +351,66 @@ export default function TimeEntryRow({
             size="middle"
             allowClear
             showSearch
-            optionFilterProp="children"
-          >
-            {statusOptions.map((option) => (
-              <Select.Option key={option} value={option}>{option}</Select.Option>
-            ))}
-          </Select>
+            optionFilterProp="label"
+            options={(statusOptions || []).map((opt) => ({
+              label: (
+                <div className="flex justify-between items-center group">
+                  <span>{opt.name || opt}</span>
+                  {opt.id && (
+                    <Trash2 
+                      size={14} 
+                      className="text-red-400 opacity-0 group-hover:opacity-100 hover:text-red-600 transition-opacity" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        Modal.confirm({
+                          title: 'Delete Option',
+                          content: `Are you sure you want to delete "${opt.name || opt}"?`,
+                          okText: 'Delete',
+                          cancelText: 'Cancel',
+                          okType: 'danger',
+                          centered: true,
+                          onOk: () => onDeleteStatusOption(opt.id)
+                        });
+                      }}
+                    />
+                  )}
+                </div>
+              ),
+              value: opt.name || opt,
+              searchLabel: opt.name || opt
+            }))}
+            filterOption={(input, option) =>
+              (option?.searchLabel ?? '').toLowerCase().includes(input.toLowerCase())
+            }
+            dropdownRender={(menu) => (
+              <>
+                {menu}
+                <Divider style={{ margin: '4px 0' }} />
+                <Button 
+                  type="text" 
+                  icon={<Plus size={14}/>} 
+                  className="w-full text-left flex items-center gap-2 justify-start px-3 py-1.5 hover:text-emerald-600 font-medium"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setModalType("status");
+                    setNewOptionValue("");
+                    setIsModalOpen(true);
+                  }}
+                >
+                  Add new status option
+                </Button>
+              </>
+            )}
+          />
         )}
       </td>
 
       <td className="px-3 py-3 border-r border-gray-200">
         {readOnly ? (
-          <span className="text-sm text-gray-600">{localEntry.bugType || "-"}</span>
+          <span className="text-sm text-gray-600">{safeBugType || "-"}</span>
         ) : (
           <Select
-            value={localEntry.bugType || undefined}
+            value={safeBugType || undefined}
             onChange={(val) => {
               setLocalEntry({ ...localEntry, bugType: val });
               triggerUpdate("bugType", val);
@@ -283,12 +420,57 @@ export default function TimeEntryRow({
             size="middle"
             allowClear
             showSearch
-            optionFilterProp="children"
-          >
-            {bugTypeOptions.map((option) => (
-              <Select.Option key={option} value={option}>{option}</Select.Option>
-            ))}
-          </Select>
+            optionFilterProp="label"
+            options={(bugTypeOptions || []).map((opt) => ({
+              label: (
+                <div className="flex justify-between items-center group">
+                  <span>{opt.name || opt}</span>
+                  {opt.id && (
+                    <Trash2 
+                      size={14} 
+                      className="text-red-400 opacity-0 group-hover:opacity-100 hover:text-red-600 transition-opacity" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        Modal.confirm({
+                          title: 'Delete Option',
+                          content: `Are you sure you want to delete "${opt.name || opt}"?`,
+                          okText: 'Delete',
+                          cancelText: 'Cancel',
+                          okType: 'danger',
+                          centered: true,
+                          onOk: () => onDeleteBugTypeOption(opt.id)
+                        });
+                      }}
+                    />
+                  )}
+                </div>
+              ),
+              value: opt.name || opt,
+              searchLabel: opt.name || opt
+            }))}
+            filterOption={(input, option) =>
+              (option?.searchLabel ?? '').toLowerCase().includes(input.toLowerCase())
+            }
+            dropdownRender={(menu) => (
+              <>
+                {menu}
+                <Divider style={{ margin: '4px 0' }} />
+                <Button 
+                  type="text" 
+                  icon={<Plus size={14}/>} 
+                  className="w-full text-left flex items-center gap-2 justify-start px-3 py-1.5 hover:text-emerald-600 font-medium"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setModalType("bugType");
+                    setNewOptionValue("");
+                    setIsModalOpen(true);
+                  }}
+                >
+                  Add new bug type option
+                </Button>
+              </>
+            )}
+          />
         )}
       </td>
 
@@ -352,6 +534,29 @@ export default function TimeEntryRow({
             <Trash2 size={16} />
           </button>
         </td>
+      )}
+      {!readOnly && (
+        <Modal
+          title={`Add New ${modalType === "type" ? "Type" : modalType === "status" ? "Status" : "Bug Type"} Option`}
+          open={isModalOpen}
+          onOk={handleAddOption}
+          onCancel={() => setIsModalOpen(false)}
+          okText="Add Option"
+          okButtonProps={{ className: "bg-emerald-600 hover:bg-emerald-700" }}
+          centered
+          destroyOnClose
+        >
+          <div className="py-4">
+            <Input 
+              ref={inputRef}
+              placeholder="Enter option name..." 
+              value={newOptionValue} 
+              onChange={(e) => setNewOptionValue(e.target.value)} 
+              onPressEnter={handleAddOption}
+              autoFocus
+            />
+          </div>
+        </Modal>
       )}
     </tr>
   );

@@ -1,10 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Toaster } from "react-hot-toast";
-import { ConfigProvider } from "antd";
+import { ConfigProvider, DatePicker, message, Popconfirm } from "antd";
+import dayjs from "dayjs";
+import { Calendar, ChevronLeft, ChevronRight, LogOut } from "lucide-react";
 
 import Dashboard from "./components/Dashboard";
 import Sidebar from "./components/Sidebar";
 import History from "./components/History";
+import Login from "./components/auth/Login";
+import Signup from "./components/auth/Signup";
+import { useAuth } from "./context/AuthContext";
 
 import LoadingSpinner from "./components/LoadingSpinner";
 import {
@@ -12,12 +17,27 @@ import {
   useDiscussion,
   useTesting,
   useSnapshots,
+  useOptions,
 } from "./hooks/useSupabase";
-import { TYPE_OPTIONS, STATUS_OPTIONS, BUG_TYPE_OPTIONS } from "./data";
+import { workspaceAPI, setUserId } from "./services/api";
 
 function App() {
+  const { currentUser, logout } = useAuth();
+  const [authView, setAuthView] = useState("login");
+
+  useEffect(() => {
+    if (currentUser) {
+      setUserId(currentUser.uid);
+    }
+  }, [currentUser]);
+
   const [activeView, setActiveView] = useState("dashboard");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [activeDate, setActiveDate] = useState(() => {
+    return new Date().toISOString().split("T")[0];
+  });
+  const [isSwapping, setIsSwapping] = useState(false);
+
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem("app-theme") || "emerald";
   });
@@ -39,12 +59,14 @@ function App() {
   const {
     discussion,
     loading: discussionLoading,
+    fetchDiscussion,
     updateDiscussion,
   } = useDiscussion();
 
   const {
     testing,
     loading: testingLoading,
+    fetchTesting,
     updateTesting,
     addBug,
     updateBug,
@@ -53,7 +75,20 @@ function App() {
 
   const { snapshots, deleteSnapshot, saveSnapshot } = useSnapshots();
 
-  const isLoading = tasksLoading || discussionLoading || testingLoading;
+  const {
+    typeOptions,
+    statusOptions,
+    bugTypeOptions,
+    addTypeOption,
+    deleteTypeOption,
+    addStatusOption,
+    deleteStatusOption,
+    addBugTypeOption,
+    deleteBugTypeOption,
+    loading: optionsLoading
+  } = useOptions();
+
+  const isLoading = tasksLoading || discussionLoading || testingLoading || optionsLoading;
 
   const antdTheme = {
     token: {
@@ -82,8 +117,88 @@ function App() {
     },
   };
 
-  if (isLoading) {
-    return <LoadingSpinner message="Loading your workspace..." />;
+  const handleDateChange = useCallback(async (newDateStr) => {
+    if (newDateStr === activeDate) return;
+    setIsSwapping(true);
+    try {
+      // 1. Save current workspace as snapshot automatically
+      // Need to dynamically calculate totalStats for snapshot like Dashboard does
+      const tasksToSave = tasks;
+      const discussionToSave = discussion;
+      const testingToSave = testing;
+
+      // Calculate minimal stats just for the snapshot reference
+      let validTime = 0, invalidTime = 0, totalMin = 0;
+      tasksToSave.forEach(t => {
+        const h = Number(t.hrs) || 0;
+        const m = Number(t.min) || 0;
+        const tMin = (h > 0 || m > 0) ? h * 60 + m : (t.totalMin || t.total_min || 0);
+        totalMin += tMin;
+        const finalTime = Number((tMin / 60).toFixed(2));
+        const isValid = t.is_valid !== undefined ? t.is_valid : t.isValid;
+        if (isValid === true) validTime += finalTime;
+        else if (isValid === false) invalidTime += finalTime;
+      });
+
+      const dMin = (discussionToSave.hrs || 0) * 60 + (discussionToSave.min || 0);
+      const testMin = (testingToSave.testingTime?.hrs || 0) * 60 + (testingToSave.testingTime?.min || 0);
+      const grandTotalTime = ((totalMin + dMin + testMin) / 60).toFixed(2);
+
+      const snapshotData = {
+        tasks: tasksToSave,
+        discussion: discussionToSave,
+        testing: testingToSave,
+        stats: { grandTotalTime, validTime, invalidTime }
+      };
+
+      // Ensure saveSnapshot runs completely
+      await saveSnapshot(snapshotData, activeDate);
+
+      // 2. Load new workspace
+      await workspaceAPI.loadWorkspace(newDateStr);
+      
+      // 3. Trigger context updates
+      setActiveDate(newDateStr);
+      await Promise.all([
+        fetchTasks(),
+        fetchDiscussion(),
+        fetchTesting()
+      ]);
+
+      message.success(`Switched workspace to ${newDateStr}`);
+    } catch (err) {
+      console.error(err);
+      message.error("Failed to switch date");
+    } finally {
+      setIsSwapping(false);
+    }
+  }, [activeDate, tasks, discussion, testing, saveSnapshot, fetchTasks, fetchDiscussion, fetchTesting]);
+
+  const changeDay = (offset) => {
+    const d = new Date(activeDate);
+    d.setDate(d.getDate() + offset);
+    handleDateChange(d.toISOString().split("T")[0]);
+  };
+
+  const setToday = () => {
+    handleDateChange(new Date().toISOString().split("T")[0]);
+  };
+
+  if (!currentUser) {
+    return (
+      <ConfigProvider theme={antdTheme}>
+        <Toaster position="top-right" />
+        {authView === "login" ? (
+          <Login onSwitchToSignup={() => setAuthView("signup")} />
+        ) : (
+          <Signup onSwitchToLogin={() => setAuthView("login")} />
+        )}
+      </ConfigProvider>
+    );
+  }
+
+  if (isLoading || isSwapping) {
+    return <LoadingSpinner message={isSwapping ? "Switching workspace..." : "Loading your workspace..."} />;
   }
 
   const renderView = () => {
@@ -103,9 +218,15 @@ function App() {
             tasks={tasks}
             discussion={discussion}
             testing={testing}
-            typeOptions={TYPE_OPTIONS}
-            statusOptions={STATUS_OPTIONS}
-            bugTypeOptions={BUG_TYPE_OPTIONS}
+            typeOptions={typeOptions}
+            statusOptions={statusOptions}
+            bugTypeOptions={bugTypeOptions}
+            onAddTypeOption={addTypeOption}
+            onDeleteTypeOption={deleteTypeOption}
+            onAddStatusOption={addStatusOption}
+            onDeleteStatusOption={deleteStatusOption}
+            onAddBugTypeOption={addBugTypeOption}
+            onDeleteBugTypeOption={deleteBugTypeOption}
             onCreateTask={createTask}
             onCreateDefaultTasks={createDefaultTasks}
             onUpdateTask={updateTask}
@@ -161,8 +282,71 @@ function App() {
           onViewChange={setActiveView}
         />
 
-        <main className={`transition-all duration-300 ${isSidebarOpen ? "ml-60" : "ml-16"}`}>
-          <div className="p-6">{renderView()}</div>
+        <main className={`transition-all duration-300 flex flex-col ${isSidebarOpen ? "ml-60" : "ml-16"}`}>
+          {/* Global Top Header */}
+          <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between sticky top-0 z-40 shadow-sm">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center bg-gray-100 rounded-lg p-1 border border-gray-200">
+                <button 
+                  onClick={() => changeDay(-1)}
+                  className="px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-emerald-600 hover:bg-white rounded transition-all"
+                >
+                  Yesterday
+                </button>
+                <div className="w-px h-4 bg-gray-300 mx-1"></div>
+                <button 
+                  onClick={setToday}
+                  className={`px-3 py-1.5 text-sm font-medium rounded transition-all ${activeDate === new Date().toISOString().split("T")[0] ? "bg-emerald-600 text-white shadow" : "text-gray-600 hover:text-emerald-600 hover:bg-white"}`}
+                >
+                  Today
+                </button>
+                <div className="w-px h-4 bg-gray-300 mx-1"></div>
+                <button 
+                  onClick={() => changeDay(1)}
+                  className="px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-emerald-600 hover:bg-white rounded transition-all"
+                >
+                  Tomorrow
+                </button>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium text-gray-500">Active Workspace:</span>
+              <DatePicker 
+                value={dayjs(activeDate)} 
+                onChange={(date) => {
+                  if (date) handleDateChange(date.format("YYYY-MM-DD"));
+                }}
+                allowClear={false}
+                className="w-40"
+              />
+              <div className="w-px h-6 bg-gray-300 mx-1"></div>
+              <Popconfirm
+                title="Log Out"
+                description="Are you sure you want to log out?"
+                onConfirm={async () => {
+                  try {
+                    await logout();
+                    message.success("Logged out successfully");
+                  } catch(e) {
+                    message.error("Failed to log out");
+                  }
+                }}
+                okText="Yes"
+                cancelText="No"
+                placement="bottomRight"
+              >
+                <button
+                  className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                >
+                  <LogOut size={16} />
+                  Logout
+                </button>
+              </Popconfirm>
+            </div>
+          </div>
+
+          <div className="p-6 flex-1 overflow-x-hidden">{renderView()}</div>
         </main>
       </div>
     </ConfigProvider>

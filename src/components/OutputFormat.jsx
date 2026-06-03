@@ -1,9 +1,21 @@
-import { Copy, Check, Download, FileText } from "lucide-react";
+import { Copy, Check, Download, FileText, RefreshCw } from "lucide-react";
 import { useState, useMemo } from "react";
 import { message } from "antd";
 
-export default function OutputFormat({ tasks = [], testing = {}, discussion = {} }) {
+export default function OutputFormat({ tasks = [], testing = {}, discussion = {}, onRefresh }) {
   const [copied, setCopied] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    if (onRefresh) {
+      await onRefresh();
+    }
+    setTimeout(() => {
+      setIsRefreshing(false);
+      message.success("Output refreshed with latest data");
+    }, 600);
+  };
 
   const formatDecimalHours = (min) => {
     const total = Number(min) || 0;
@@ -105,24 +117,13 @@ export default function OutputFormat({ tasks = [], testing = {}, discussion = {}
   };
 
   const getPanelExtra = (task, normalizedStatus) => {
-    // Done ke case me bug type dikhana
-    if (normalizedStatus === "Done" && task.bugType) {
-      return task.bugType;
-    }
-
-    // Debug & Transfer ke case me side dikhana: BE/FE/PHP
-    // Iske liye task me panelSide / transferType / devType add kar sakte ho
+    // Debug & Transfer ke case me agar koi side mention hai
     if (normalizedStatus === "Debug & Transfer") {
-      return (
-        task.panelSide ||
-        task.transferType ||
-        task.devType ||
-        task.assignedSide ||
-        ""
-      );
+      const side = task.panelSide || task.transferType || task.devType || task.assignedSide;
+      if (side) return side;
     }
 
-    return "";
+    return task.bugType || "";
   };
 
   const { fullOutput, outputBlocks } = useMemo(() => {
@@ -146,73 +147,57 @@ export default function OutputFormat({ tasks = [], testing = {}, discussion = {}
         groups[normalizedType].push(t);
       });
 
-      let globalIdx = 1;
-
       const orderedCategories = ["Panel Bugs", "NF", "internal"];
 
-      orderedCategories.forEach((cat) => {
-        const arr = groups[cat];
+      const renderGroup = (catName, arr) => {
         if (!arr || arr.length === 0) return;
 
-        const headerPrefix = cat === "Panel Bugs" ? "" : "* ";
-        const suffix = cat === "Panel Bugs" ? "" : " :";
-        blocks.push({ type: "category", text: `${headerPrefix}[${cat}] [${arr.length}]${suffix}` });
+        let validCount = 0;
+        let invalidCount = 0;
+        arr.forEach(t => {
+          const v = t.isValid !== undefined ? t.isValid : t.is_valid;
+          if (v === true) validCount++;
+          else if (v === false) invalidCount++;
+        });
+
+        const headerPrefix = catName === "Panel Bugs" ? "" : "* ";
+        const suffix = catName === "Panel Bugs" ? "" : " :";
+        
+        blocks.push({ 
+          type: "category", 
+          text: `${headerPrefix}[${catName}] [${arr.length}] [valid (${validCount}) , invalid (${invalidCount})]${suffix}` 
+        });
 
         arr.forEach((t) => {
           const totalMin = getTaskMinutes(t);
           const cuLink = extractClickupLink(t.task, t.cuLink);
           const status = t.status || "In progress";
+          const bugType = t.bugType || t.bug_type || "N/A";
           const minDisplay = formatMinutesDisplay(totalMin);
           const hrDecimal = formatDecimalHours(totalMin);
           const desc = extractDescription(t.task);
+          
+          const validStatus = t.isValid !== undefined ? t.isValid : t.is_valid;
+          const validTag = validStatus === true ? "[VALID] > " : validStatus === false ? "[INVALID] > " : "";
 
           blocks.push({ 
             type: "task", 
-            text: `${globalIdx} . ${status} => ${cuLink} >> (${status}) >> ${minDisplay} >> ${hrDecimal}\n\n=> ${desc}` 
+            text: `${validTag}${bugType} > ${cuLink || "-"} > ${status} > ${minDisplay} > ${hrDecimal}\n\n=> ${desc}` 
           });
-          globalIdx++;
         });
+      };
+
+      orderedCategories.forEach((cat) => {
+        renderGroup(cat, groups[cat]);
       });
 
       Object.entries(groups).forEach(([type, arr]) => {
         if (orderedCategories.includes(type)) return;
-        if (!arr || arr.length === 0) return;
-
-        blocks.push({ type: "category", text: `[${type}] [${arr.length}]` });
-
-        arr.forEach((t) => {
-          const totalMin = getTaskMinutes(t);
-          const cuLink = extractClickupLink(t.task, t.cuLink);
-          const status = t.status || "In progress";
-          const minDisplay = formatMinutesDisplay(totalMin);
-          const hrDecimal = formatDecimalHours(totalMin);
-          const desc = extractDescription(t.task);
-
-          blocks.push({ 
-            type: "task", 
-            text: `${globalIdx} . ${status} => ${cuLink} >> (${status}) >> ${minDisplay} >> ${hrDecimal}\n\n=> ${desc}` 
-          });
-          globalIdx++;
-        });
+        renderGroup(type, arr);
       });
 
       if (uncategorized.length > 0) {
-        blocks.push({ type: "category", text: `[Uncategorized] [${uncategorized.length}]` });
-
-        uncategorized.forEach((t) => {
-          const totalMin = getTaskMinutes(t);
-          const cuLink = extractClickupLink(t.task, t.cuLink);
-          const status = t.status || "In progress";
-          const minDisplay = formatMinutesDisplay(totalMin);
-          const hrDecimal = formatDecimalHours(totalMin);
-          const desc = extractDescription(t.task);
-
-          blocks.push({ 
-            type: "task", 
-            text: `${globalIdx} . ${status} => ${cuLink} >> (${status}) >> ${minDisplay} >> ${hrDecimal}\n\n=> ${desc}` 
-          });
-          globalIdx++;
-        });
+        renderGroup("Uncategorized", uncategorized);
       }
     };
 
@@ -374,6 +359,15 @@ export default function OutputFormat({ tasks = [], testing = {}, discussion = {}
         </div>
 
         <div className="flex gap-2">
+          <button
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-700 text-white text-sm rounded hover:bg-gray-600 transition-colors disabled:opacity-50"
+          >
+            <RefreshCw size={14} className={isRefreshing ? "animate-spin" : ""} />
+            Refresh
+          </button>
+
           <button
             onClick={handleDownload}
             className="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-700 text-white text-sm rounded hover:bg-gray-600 transition-colors"

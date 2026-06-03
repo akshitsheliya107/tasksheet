@@ -606,27 +606,27 @@ export default function TestingSection({
             activeKey={mainExpanded}
             onChange={handleMainExpandChange}
             expandIcon={mainExpandIcon}
-            expandIconPosition="start"
-          >
-            <Panel
-              header={
-                <div className="flex items-center gap-3 text-white">
-                  <Bug size={18} />
-                  <span className="font-semibold text-sm">Testing Section</span>
-                  <div className="ml-auto flex items-center gap-3 text-sm">
-                    <span className="px-3 py-1 bg-white/20 rounded-full backdrop-blur-sm font-semibold">
-                      {finalTime} hrs
-                    </span>
-                    <span className="px-3 py-1 bg-white/20 rounded-full backdrop-blur-sm font-semibold">
-                      {testing.bugs?.length || 0} bugs
-                    </span>
+            expandIconPlacement="start"
+            items={[
+              {
+                key: "main-section",
+                label: (
+                  <div className="flex items-center gap-3 text-white">
+                    <Bug size={18} />
+                    <span className="font-semibold text-sm">Testing Section</span>
+                    <div className="ml-auto flex items-center gap-3 text-sm">
+                      <span className="px-3 py-1 bg-white/20 rounded-full backdrop-blur-sm font-semibold">
+                        {finalTime} hrs
+                      </span>
+                      <span className="px-3 py-1 bg-white/20 rounded-full backdrop-blur-sm font-semibold">
+                        {testing.bugs?.length || 0} bugs
+                      </span>
+                    </div>
                   </div>
-                </div>
-              }
-              key="main-section"
-            >
-              <table className="w-full border-collapse">
-                <tbody>
+                ),
+                children: (
+                  <table className="w-full border-collapse">
+                    <tbody>
                   {/* Testing Time Row - Always Visible */}
                   <tr className="bg-purple-50/70 border-b border-purple-100 animate-fadeSlideIn">
                     <td
@@ -692,21 +692,21 @@ export default function TestingSection({
                           activeKey={additionalDetailsOpen}
                           onChange={handleAdditionalDetailsChange}
                           expandIcon={additionalExpandIcon}
-                          expandIconPosition="start"
-                        >
-                          <Panel
-                            header={
-                              <div className="flex items-center gap-2">
-                                <span>📋 Additional Details</span>
-                                <span className="text-xs text-purple-500 font-normal ml-2">
-                                  (Testing Module, Scenarios & Bugs)
-                                </span>
-                              </div>
-                            }
-                            key="additional-details"
-                          >
-                            <table className="w-full border-collapse">
-                              <tbody>
+                          expandIconPlacement="start"
+                          items={[
+                            {
+                              key: "additional-details",
+                              label: (
+                                <div className="flex items-center gap-2">
+                                  <span>📋 Additional Details</span>
+                                  <span className="text-xs text-purple-500 font-normal ml-2">
+                                    (Testing Module, Scenarios & Bugs)
+                                  </span>
+                                </div>
+                              ),
+                              children: (
+                                <table className="w-full border-collapse">
+                                  <tbody>
                                 {/* Testing Module */}
                                 <tr className="bg-white border-b border-gray-200 animate-fadeSlideIn">
                                   <td
@@ -905,18 +905,21 @@ export default function TestingSection({
                                   </tr>
                                 )}
                               </tbody>
-                            </table>
-                          </Panel>
-                        </Collapse>
+                                </table>
+                              )
+                            }
+                          ]}
+                        />
                       </div>
                     </td>
                   </tr>
                 </tbody>
               </table>
-            </Panel>
-          </Collapse>
-        </div>
-      </td>
-    </tr>
-  );
+            )
+          }]}
+        />
+      </div>
+    </td>
+  </tr>
+);
 }

@@ -24,6 +24,12 @@ export default function Dashboard({
   typeOptions,
   statusOptions,
   bugTypeOptions,
+  onAddTypeOption,
+  onDeleteTypeOption,
+  onAddStatusOption,
+  onDeleteStatusOption,
+  onAddBugTypeOption,
+  onDeleteBugTypeOption,
   onCreateTask,
   onCreateDefaultTasks,
   onUpdateTask,
@@ -45,12 +51,7 @@ export default function Dashboard({
 useEffect(() => {
   if (!initialized) {
     if (tasks.length === 0) {
-      // ✅ Check karo localStorage me already tasks hain kya
-      const savedTasks = JSON.parse(localStorage.getItem("tasks") || "[]");
-      if (savedTasks.length === 0) {
-        // Sirf tabhi create karo jab sach me koi task nahi hai
-        onCreateDefaultTasks(4);
-      }
+      onCreateDefaultTasks(10);
     }
     setInitialized(true);
   }
@@ -374,6 +375,12 @@ useEffect(() => {
                   typeOptions={typeOptions}
                   statusOptions={statusOptions}
                   bugTypeOptions={bugTypeOptions}
+                  onAddTypeOption={onAddTypeOption}
+                  onDeleteTypeOption={onDeleteTypeOption}
+                  onAddStatusOption={onAddStatusOption}
+                  onDeleteStatusOption={onDeleteStatusOption}
+                  onAddBugTypeOption={onAddBugTypeOption}
+                  onDeleteBugTypeOption={onDeleteBugTypeOption}
                   cuLink={entry.cuLink}
                 />
               ))}
@@ -490,7 +497,7 @@ useEffect(() => {
         </div>
       </div>
 
-      <OutputFormat tasks={tasks} testing={testing} discussion={discussion} />
+      <OutputFormat tasks={tasks} testing={testing} discussion={discussion} onRefresh={onRefresh} />
 
       <AddTaskModal
         isOpen={showAddModal}
