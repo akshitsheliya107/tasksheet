@@ -140,6 +140,31 @@ export const discussionAPI = {
   },
 };
 
+// ============ MR ISSUE API (localStorage) ============
+const MR_ISSUE_KEY = "mr_issue";
+
+export const mrIssueAPI = {
+  async get() {
+    let mrIssue = JSON.parse(localStorage.getItem(getKey(MR_ISSUE_KEY)));
+    if (!mrIssue) {
+      mrIssue = {
+        id: 1,
+        hrs: 0,
+        min: 0,
+        note: "MR Issues / review / fixing",
+      };
+      localStorage.setItem(getKey(MR_ISSUE_KEY), JSON.stringify(mrIssue));
+    }
+    return mrIssue;
+  },
+
+  async update(id, mrIssue) {
+    const updated = { ...mrIssue, id };
+    localStorage.setItem(getKey(MR_ISSUE_KEY), JSON.stringify(updated));
+    return updated;
+  },
+};
+
 // ============ TESTING API (localStorage) ============
 const TESTING_KEY = "testing";
 const BUGS_KEY = "bugs";
@@ -312,6 +337,7 @@ export const snapshotsAPI = {
       Object.assign(existing, {
         tasks_data: snapshotData.tasks,
         discussion_data: snapshotData.discussion,
+        mrIssue_data: snapshotData.mrIssue,
         testing_data: snapshotData.testing,
         total_stats: snapshotData.stats,
         updated_at: new Date().toISOString(),
@@ -322,6 +348,7 @@ export const snapshotsAPI = {
         snapshot_date: targetDate,
         tasks_data: snapshotData.tasks,
         discussion_data: snapshotData.discussion,
+        mrIssue_data: snapshotData.mrIssue,
         testing_data: snapshotData.testing,
         total_stats: snapshotData.stats,
         created_at: new Date().toISOString(),
@@ -348,6 +375,7 @@ export const workspaceAPI = {
     if (snap) {
       localStorage.setItem(getKey(TASKS_KEY), JSON.stringify(snap.tasks_data || []));
       localStorage.setItem(getKey(DISCUSSION_KEY), JSON.stringify(snap.discussion_data || {}));
+      localStorage.setItem(getKey(MR_ISSUE_KEY), JSON.stringify(snap.mrIssue_data || {}));
       
       const testData = snap.testing_data || {};
       const bugs = testData.bugs || [];
@@ -360,6 +388,9 @@ export const workspaceAPI = {
       localStorage.setItem(getKey(TASKS_KEY), JSON.stringify([]));
       localStorage.setItem(getKey(DISCUSSION_KEY), JSON.stringify({
         id: 1, hrs: 0, min: 0, note: "General discussion / meetings / calls"
+      }));
+      localStorage.setItem(getKey(MR_ISSUE_KEY), JSON.stringify({
+        id: 1, hrs: 0, min: 0, note: "MR Issues / review / fixing"
       }));
       localStorage.setItem(getKey(TESTING_KEY), JSON.stringify({
         id: 1, testing_hrs: 0, testing_min: 0, testing_module: "", test_case_scenario: "", bug_founded_module: ""

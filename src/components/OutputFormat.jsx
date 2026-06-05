@@ -2,7 +2,7 @@ import { Copy, Check, Download, FileText, RefreshCw } from "lucide-react";
 import { useState, useMemo } from "react";
 import { message } from "antd";
 
-export default function OutputFormat({ tasks = [], testing = {}, discussion = {}, onRefresh }) {
+export default function OutputFormat({ tasks = [], testing = {}, discussion = {}, mrIssue = {}, onRefresh }) {
   const [copied, setCopied] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -88,10 +88,10 @@ export default function OutputFormat({ tasks = [], testing = {}, discussion = {}
       "panel bugs": "Panel Bugs",
       "panel bug": "Panel Bugs",
       nf: "NF",
-      internal: "internal",
-      "internal bug": "internal",
-      "internal valid bug": "internal",
-      "internal invalid/dev. reply bugs": "internal",
+      internal: "Internal CU",
+      "internal bug": "Internal CU",
+      "internal valid bug": "Internal CU",
+      "internal invalid/dev. reply bugs": "Internal CU",
     };
 
     return map[key] || type;
@@ -150,7 +150,7 @@ export default function OutputFormat({ tasks = [], testing = {}, discussion = {}
         groups[normalizedType].push(t);
       });
 
-      const orderedCategories = ["Panel Bugs", "NF", "internal"];
+      const orderedCategories = ["Panel Bugs", "NF", "Internal CU"];
 
       const renderGroup = (catName, arr) => {
         if (!arr || arr.length === 0) return;
@@ -168,7 +168,7 @@ export default function OutputFormat({ tasks = [], testing = {}, discussion = {}
 
         blocks.push({
           type: "category",
-          text: `${headerPrefix}[${catName}] [${arr.length}] [valid (${validCount}) , invalid (${invalidCount})]${suffix}`
+          text: `${headerPrefix}[${catName}] [${arr.length}]${suffix}`
         });
 
         arr.forEach((t) => {
@@ -178,14 +178,18 @@ export default function OutputFormat({ tasks = [], testing = {}, discussion = {}
           const bugType = t.bugType || t.bug_type || "N/A";
           const minDisplay = formatMinutesDisplay(totalMin);
           const hrDecimal = formatDecimalHours(totalMin);
-          const desc = extractDescription(t.task);
+          const desc = extractDescription(t.task).replace(/\n/g, " ");
 
-          const validStatus = t.isValid !== undefined ? t.isValid : t.is_valid;
-          const validTag = validStatus === true ? "[VALID] > " : validStatus === false ? "[INVALID] > " : "";
+          let taskText = "";
+          if (catName === "NF") {
+            taskText = `[${bugType}] => [${cuLink || "-"}] => ${desc} => [${status}] => Time Spent: ${minDisplay} = ${hrDecimal}`;
+          } else {
+            taskText = `[${bugType}] => ${cuLink || "-"} => ${desc} => [${status}] => Time Spent: ${minDisplay} = ${hrDecimal}`;
+          }
 
           blocks.push({
             type: "task",
-            text: `${validTag}${bugType} > ${cuLink || "-"} > ${status} > ${minDisplay} > ${hrDecimal}\n\n=> ${desc}`
+            text: taskText
           });
         });
       };
@@ -215,6 +219,19 @@ export default function OutputFormat({ tasks = [], testing = {}, discussion = {}
       const note = discussion?.note || "Discussion";
 
       blocks.push({ type: "discussion", text: `[Discussion]\n\n=> ${note} >> ${minDisplay} >> ${hrDecimal}` });
+    };
+
+    const generateMrIssueOutput = () => {
+      const h = Number(mrIssue?.hrs) || 0;
+      const m = Number(mrIssue?.min) || 0;
+      if (h === 0 && m === 0 && !mrIssue?.note) return;
+
+      const totalMin = h * 60 + m;
+      const minDisplay = formatMinutesDisplay(totalMin);
+      const hrDecimal = formatDecimalHours(totalMin);
+      const note = mrIssue?.note || "MR Issues";
+
+      blocks.push({ type: "mrIssue", text: `[MR Issue]\n\n=> ${note} >> ${minDisplay} >> ${hrDecimal}` });
     };
 
     const generatePanelUpdateOutput = () => {
@@ -317,6 +334,7 @@ export default function OutputFormat({ tasks = [], testing = {}, discussion = {}
 
     generateTasksOutput();
     generateDiscussionOutput();
+    generateMrIssueOutput();
     generatePanelUpdateOutput();
     generateTestingOutput();
 

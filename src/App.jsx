@@ -18,6 +18,7 @@ import {
   useTesting,
   useSnapshots,
   useOptions,
+  useMrIssue,
 } from "./hooks/useSupabase";
 import { workspaceAPI, setUserId } from "./services/api";
 
@@ -77,6 +78,13 @@ function App() {
   } = useDiscussion();
 
   const {
+    mrIssue,
+    loading: mrIssueLoading,
+    fetchMrIssue,
+    updateMrIssue,
+  } = useMrIssue();
+
+  const {
     testing,
     loading: testingLoading,
     fetchTesting,
@@ -101,7 +109,7 @@ function App() {
     loading: optionsLoading
   } = useOptions();
 
-  const isLoading = tasksLoading || discussionLoading || testingLoading || optionsLoading;
+  const isLoading = tasksLoading || discussionLoading || testingLoading || optionsLoading || mrIssueLoading;
 
   const antdTheme = {
     algorithm: isDarkMode ? antdThemeLib.darkAlgorithm : antdThemeLib.defaultAlgorithm,
@@ -141,6 +149,7 @@ function App() {
       // Need to dynamically calculate totalStats for snapshot like Dashboard does
       const tasksToSave = tasks;
       const discussionToSave = discussion;
+      const mrIssueToSave = mrIssue;
       const testingToSave = testing;
 
       // Calculate minimal stats just for the snapshot reference
@@ -157,12 +166,14 @@ function App() {
       });
 
       const dMin = (discussionToSave.hrs || 0) * 60 + (discussionToSave.min || 0);
+      const mrMin = (mrIssueToSave.hrs || 0) * 60 + (mrIssueToSave.min || 0);
       const testMin = (testingToSave.testingTime?.hrs || 0) * 60 + (testingToSave.testingTime?.min || 0);
-      const grandTotalTime = ((totalMin + dMin + testMin) / 60).toFixed(2);
+      const grandTotalTime = ((totalMin + dMin + mrMin + testMin) / 60).toFixed(2);
 
       const snapshotData = {
         tasks: tasksToSave,
         discussion: discussionToSave,
+        mrIssue: mrIssueToSave,
         testing: testingToSave,
         stats: { grandTotalTime, validTime, invalidTime }
       };
@@ -178,6 +189,7 @@ function App() {
       await Promise.all([
         fetchTasks(),
         fetchDiscussion(),
+        fetchMrIssue(),
         fetchTesting()
       ]);
 
@@ -188,7 +200,7 @@ function App() {
     } finally {
       setIsSwapping(false);
     }
-  }, [activeDate, tasks, discussion, testing, saveSnapshot, fetchTasks, fetchDiscussion, fetchTesting]);
+  }, [activeDate, tasks, discussion, mrIssue, testing, saveSnapshot, fetchTasks, fetchDiscussion, fetchMrIssue, fetchTesting]);
 
   const changeDay = (offset) => {
     const d = new Date(activeDate);
@@ -233,6 +245,7 @@ function App() {
           <Dashboard
             tasks={tasks}
             discussion={discussion}
+            mrIssue={mrIssue}
             testing={testing}
             typeOptions={typeOptions}
             statusOptions={statusOptions}
@@ -248,6 +261,7 @@ function App() {
             onUpdateTask={updateTask}
             onDeleteTask={deleteTask}
             onUpdateDiscussion={updateDiscussion}
+            onUpdateMrIssue={updateMrIssue}
             onUpdateTesting={updateTesting}
             onAddBug={addBug}
             onUpdateBug={updateBug}

@@ -20,6 +20,7 @@ import AddTaskModal from "./AddTaskModal";
 export default function Dashboard({
   tasks,
   discussion,
+  mrIssue,
   testing,
   typeOptions,
   statusOptions,
@@ -35,6 +36,7 @@ export default function Dashboard({
   onUpdateTask,
   onDeleteTask,
   onUpdateDiscussion,
+  onUpdateMrIssue,
   onUpdateTesting,
   onAddBug,
   onUpdateBug,
@@ -45,6 +47,7 @@ export default function Dashboard({
 }) {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showDiscussion, setShowDiscussion] = useState(true);
+  const [showMrIssue, setShowMrIssue] = useState(true);
   const [saving, setSaving] = useState(false);
   const [initialized, setInitialized] = useState(false);
 
@@ -122,9 +125,14 @@ export default function Dashboard({
   }, [tasks]);
 
   const discussionStats = useMemo(() => {
-    const totalMin = (discussion.hrs || 0) * 60 + (discussion.min || 0);
+    const totalMin = (discussion?.hrs || 0) * 60 + (discussion?.min || 0);
     return { totalMin, finalTime: (totalMin / 60).toFixed(2) };
   }, [discussion]);
+
+  const mrIssueStats = useMemo(() => {
+    const totalMin = (mrIssue?.hrs || 0) * 60 + (mrIssue?.min || 0);
+    return { totalMin, finalTime: (totalMin / 60).toFixed(2) };
+  }, [mrIssue]);
 
   const testingStats = useMemo(() => {
     const totalMin =
@@ -133,7 +141,7 @@ export default function Dashboard({
   }, [testing]);
 
   const grandTotalMin =
-    tasksStats.totalMin + discussionStats.totalMin + testingStats.totalMin;
+    tasksStats.totalMin + discussionStats.totalMin + mrIssueStats.totalMin + testingStats.totalMin;
   const grandTotalTime = (grandTotalMin / 60).toFixed(2);
 
   const handleDeleteTask = (id) => {
@@ -158,6 +166,7 @@ export default function Dashboard({
       await onSaveSnapshot({
         tasks,
         discussion,
+        mrIssue,
         testing,
         stats: {
           grandTotalMin,
@@ -452,6 +461,71 @@ export default function Dashboard({
                 </tr>
               )}
 
+              <tr
+                className="bg-[#145dff82] dark:bg-indigo-900/40 transition-all duration-200 cursor-pointer"
+                onClick={() => setShowMrIssue(!showMrIssue)}
+              >
+                <td colSpan={12} className="px-5 py-3.5">
+                  <div className="flex items-center gap-3 text-white">
+                    <MessageSquare size={18} />
+                    <span className="font-semibold text-sm">MR Issue</span>
+                    <span className="text-blue-200 text-xs transition-transform duration-200">
+                      {showMrIssue ? "▼" : "▶"}
+                    </span>
+                    <span className="ml-auto text-sm font-semibold px-3 py-1 bg-white/20 rounded-full">
+                      {mrIssueStats.finalTime} hrs
+                    </span>
+                  </div>
+                </td>
+              </tr>
+
+              {showMrIssue && (
+                <tr className="bg-blue-50 dark:bg-gray-800 animate-slideDown">
+                  <td className="px-4 py-3 text-center text-gray-400 text-sm border-r border-gray-200 dark:border-gray-700">
+                    -
+                  </td>
+                  <td className="px-4 py-3 border-r border-gray-200 dark:border-gray-700">
+                    <input
+                      type="text"
+                      value={mrIssue?.note || ""}
+                      onChange={(e) =>
+                        onUpdateMrIssue("note", e.target.value)
+                      }
+                      className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                      placeholder="MR Issues notes..."
+                    />
+                  </td>
+                  <td className="px-4 py-3 border-r border-gray-200 dark:border-gray-700">
+                    <input
+                      min="0"
+                      value={mrIssue?.hrs || 0}
+                      onChange={(e) =>
+                        onUpdateMrIssue("hrs", Number(e.target.value))
+                      }
+                      className="w-full px-2 py-2 text-sm text-center bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
+                    />
+                  </td>
+                  <td className="px-4 py-3 border-r border-gray-200 dark:border-gray-700">
+                    <input
+                      min="0"
+                      max="59"
+                      value={mrIssue?.min || 0}
+                      onChange={(e) =>
+                        onUpdateMrIssue("min", Number(e.target.value))
+                      }
+                      className="w-full px-2 py-2 text-sm text-center bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
+                    />
+                  </td>
+                  <td className="px-4 py-3 text-center text-sm font-semibold text-blue-700 dark:text-blue-400 border-r border-gray-200 dark:border-gray-700">
+                    {mrIssueStats.totalMin}
+                  </td>
+                  <td className="px-4 py-3 text-center text-sm font-bold text-blue-700 dark:text-blue-400 border-r border-gray-200 dark:border-gray-700">
+                    {mrIssueStats.finalTime}
+                  </td>
+                  <td colSpan={6} className="bg-gray-50 dark:bg-gray-800/50"></td>
+                </tr>
+              )}
+
               <TestingSection
                 testing={testing}
                 onUpdate={onUpdateTesting}
@@ -497,7 +571,7 @@ export default function Dashboard({
         </div>
       </div>
 
-      <OutputFormat tasks={tasks} testing={testing} discussion={discussion} onRefresh={onRefresh} />
+      <OutputFormat tasks={tasks} testing={testing} discussion={discussion} mrIssue={mrIssue} onRefresh={onRefresh} />
 
       <AddTaskModal
         isOpen={showAddModal}

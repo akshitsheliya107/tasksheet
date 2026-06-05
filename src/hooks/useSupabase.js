@@ -6,6 +6,7 @@ import {
   bugsAPI,
   optionsAPI,
   snapshotsAPI,
+  mrIssueAPI,
 } from "../services/api";
 import toast from "react-hot-toast";
 
@@ -160,6 +161,52 @@ export function useDiscussion() {
   }, [fetchDiscussion]);
 
   return { discussion, loading, fetchDiscussion, updateDiscussion, setDiscussion };
+}
+
+export function useMrIssue() {
+  const [mrIssue, setMrIssue] = useState({
+    id: null,
+    hrs: 0,
+    min: 0,
+    note: "",
+  });
+  const [loading, setLoading] = useState(true);
+
+  const fetchMrIssue = useCallback(async () => {
+    try {
+      setLoading(true);
+      const data = await mrIssueAPI.get();
+      if (data) {
+        setMrIssue({
+          id: data.id,
+          hrs: data.hrs,
+          min: data.min,
+          note: data.note,
+        });
+      }
+    } catch (err) {
+      toast.error("Failed to load MR Issue");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const updateMrIssue = async (field, value) => {
+    const updated = { ...mrIssue, [field]: value };
+    setMrIssue(updated);
+
+    try {
+      await mrIssueAPI.update(mrIssue.id, updated);
+    } catch (err) {
+      toast.error("Failed to update MR Issue");
+    }
+  };
+
+  useEffect(() => {
+    fetchMrIssue();
+  }, [fetchMrIssue]);
+
+  return { mrIssue, loading, fetchMrIssue, updateMrIssue, setMrIssue };
 }
 
 export function useTesting() {
