@@ -16,8 +16,8 @@ export default function Sidebar({
 }) {
   const menuItems = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { id: "keka_timer", label: "Keka Timer", icon: Clock },
     { id: "history", label: "History", icon: History },
-    // { id: "settings", label: "Settings", icon: Settings },
   ];
 
   return (

@@ -7,6 +7,7 @@ import { Calendar, ChevronLeft, ChevronRight, LogOut, Moon, Sun } from "lucide-r
 import Dashboard from "./components/Dashboard";
 import Sidebar from "./components/Sidebar";
 import History from "./components/History";
+import KekaTimer from "./components/KekaTimer";
 import Login from "./components/auth/Login";
 import Signup from "./components/auth/Signup";
 import { useAuth } from "./context/AuthContext";
@@ -240,6 +241,8 @@ function App() {
             onSaveSnapshot={saveSnapshot}
           />
         );
+      case "keka_timer":
+        return <KekaTimer />;
       case "dashboard":
       default:
         return (
