@@ -10,6 +10,7 @@ import {
   FileText,
   MessageSquare,
   Bug,
+  Trash2,
 } from "lucide-react";
 import { Modal, message } from "antd";
 import TimeEntryRow from "./TimeEntryRow";
@@ -35,6 +36,7 @@ export default function Dashboard({
   onCreateDefaultTasks,
   onUpdateTask,
   onDeleteTask,
+  onDeleteAllTasks,
   onUpdateDiscussion,
   onUpdateMrIssue,
   onUpdateTesting,
@@ -160,6 +162,25 @@ export default function Dashboard({
     });
   };
 
+  const handleDeleteAllTasks = () => {
+    Modal.confirm({
+      title: "Delete All Tasks",
+      content: "Are you sure you want to delete all tasks? This action cannot be undone.",
+      okText: "Yes, Delete All",
+      cancelText: "Cancel",
+      okType: "danger",
+      centered: true,
+      onOk: async () => {
+        try {
+          await onDeleteAllTasks();
+          message.success("All tasks deleted successfully");
+        } catch (error) {
+          message.error("Failed to delete tasks");
+        }
+      },
+    });
+  };
+
   const handleSaveReport = async () => {
     setSaving(true);
     try {
@@ -216,6 +237,13 @@ export default function Dashboard({
             >
               <Plus size={16} />
               Add Task
+            </button>
+            <button
+              onClick={handleDeleteAllTasks}
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105"
+            >
+              <Trash2 size={16} />
+              Delete All
             </button>
             <button
               onClick={handleSaveReport}

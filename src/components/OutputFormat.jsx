@@ -182,9 +182,9 @@ export default function OutputFormat({ tasks = [], testing = {}, discussion = {}
 
           let taskText = "";
           if (catName === "NF") {
-            taskText = `[${bugType}] => [${cuLink || "-"}] => ${desc} => [${status}] => Time Spent: ${minDisplay} = ${hrDecimal}`;
+            taskText = `[${bugType}] => [${cuLink || "-"}] => ${desc} => [${status}] => Time Spent: ${minDisplay} = ${hrDecimal}\n`;
           } else {
-            taskText = `[${bugType}] => ${cuLink || "-"} => ${desc} => [${status}] => Time Spent: ${minDisplay} = ${hrDecimal}`;
+            taskText = `[${bugType}] => ${cuLink || "-"} => ${desc} => [${status}] => Time Spent: ${minDisplay} = ${hrDecimal}\n`;
           }
 
           blocks.push({

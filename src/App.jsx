@@ -68,6 +68,7 @@ function App() {
     createDefaultTasks,
     updateTask,
     deleteTask,
+    deleteAllTasks,
   } = useTasks();
 
   const {
@@ -260,6 +261,7 @@ function App() {
             onCreateDefaultTasks={createDefaultTasks}
             onUpdateTask={updateTask}
             onDeleteTask={deleteTask}
+            onDeleteAllTasks={deleteAllTasks}
             onUpdateDiscussion={updateDiscussion}
             onUpdateMrIssue={updateMrIssue}
             onUpdateTesting={updateTesting}
@@ -318,24 +320,10 @@ function App() {
             <div className="flex items-center gap-4">
               <div className="flex items-center bg-gray-100 dark:bg-gray-900 rounded-lg p-1 border border-gray-200 dark:border-gray-700 transition-colors duration-300">
                 <button 
-                  onClick={() => changeDay(-1)}
-                  className="px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-white dark:hover:bg-gray-800 rounded transition-all"
-                >
-                  Yesterday
-                </button>
-                <div className="w-px h-4 bg-gray-300 dark:bg-gray-700 mx-1"></div>
-                <button 
                   onClick={setToday}
-                  className={`px-3 py-1.5 text-sm font-medium rounded transition-all ${activeDate === new Date().toISOString().split("T")[0] ? "bg-emerald-600 text-white shadow" : "text-gray-600 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-white dark:hover:bg-gray-800"}`}
+                  className="px-3 py-1.5 text-sm font-medium rounded transition-all bg-emerald-600 text-white shadow"
                 >
                   Today
-                </button>
-                <div className="w-px h-4 bg-gray-300 dark:bg-gray-700 mx-1"></div>
-                <button 
-                  onClick={() => changeDay(1)}
-                  className="px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-emerald-600 hover:bg-white rounded transition-all"
-                >
-                  Tomorrow
                 </button>
               </div>
             </div>
@@ -350,15 +338,6 @@ function App() {
               </button>
               <div className="w-px h-6 bg-gray-300 dark:bg-gray-700 mx-1"></div>
 
-              <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Active Workspace:</span>
-              <DatePicker 
-                value={dayjs(activeDate)} 
-                onChange={(date) => {
-                  if (date) handleDateChange(date.format("YYYY-MM-DD"));
-                }}
-                allowClear={false}
-                className="w-40"
-              />
               <div className="w-px h-6 bg-gray-300 dark:bg-gray-700 mx-1"></div>
               <Popconfirm
                 title="Log Out"

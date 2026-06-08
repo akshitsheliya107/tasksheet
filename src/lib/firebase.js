@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore"; // We might need this later
+import { getFirestore, enableMultiTabIndexedDbPersistence } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBKcdgIq9HhYXwHBCF9YdrwP3E5I529x9Q",
@@ -15,5 +15,13 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+
+enableMultiTabIndexedDbPersistence(db).catch((err) => {
+  if (err.code === "failed-precondition") {
+    console.warn("Firebase persistence: Multiple tabs open.");
+  } else if (err.code === "unimplemented") {
+    console.warn("Firebase persistence: Browser not supported.");
+  }
+});
 
 export { auth, db, app };

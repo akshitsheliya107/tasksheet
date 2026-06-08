@@ -1,4 +1,6 @@
 import { initialTypeOptions, initialStatusOptions, initialBugTypeOptions } from "../data";
+import { db } from "../lib/firebase";
+import { doc, getDoc, setDoc, collection, getDocs, deleteDoc, getDocFromCache } from "firebase/firestore";
 
 let currentUserId = "";
 
@@ -6,27 +8,78 @@ export const setUserId = (uid) => {
   currentUserId = uid;
 };
 
-const getKey = (key) => {
-  return currentUserId ? `${currentUserId}_${key}` : key;
-};
+// Helper to get document reference
+const getRef = (...pathSegments) => doc(db, "users", currentUserId, ...pathSegments);
 
-const TASKS_KEY = "tasks";
+// Helper to get data from a document, with default fallback
+async function getFirestoreData(pathSegments, defaultData) {
+  if (!currentUserId) {
+    console.warn("[API] getFirestoreData skipped: No currentUserId", pathSegments);
+    return defaultData;
+  }
+  try {
+    console.log(`[API] getFirestoreData: Fetching from path [${pathSegments.join(", ")}]...`);
+    
+    // Add a 1s timeout to network fetch. If adblocker blocks it, we don't wait 10s.
+    const ref = getRef(...pathSegments);
+    const snap = await Promise.race([
+      getDoc(ref),
+      new Promise((_, reject) => setTimeout(() => reject(new Error("TIMEOUT")), 1000))
+    ]);
 
-function getTasksFromLS() {
-  return JSON.parse(localStorage.getItem(getKey(TASKS_KEY)) || "[]");
+    if (snap.exists()) {
+      const data = snap.data();
+      return Array.isArray(defaultData) ? data.items || defaultData : data;
+    }
+  } catch (err) {
+    console.warn(`[API ERROR] getFirestoreData network/timeout for path [${pathSegments.join(", ")}]:`, err.message);
+    
+    // Try local cache if network fails or times out
+    try {
+      const cacheSnap = await getDocFromCache(getRef(...pathSegments));
+      if (cacheSnap.exists()) {
+        const data = cacheSnap.data();
+        console.log(`[API] getFirestoreData: Success (from cache) for path [${pathSegments.join(", ")}]`);
+        return Array.isArray(defaultData) ? data.items || defaultData : data;
+      }
+    } catch (cacheErr) {
+       // Cache empty or failed
+    }
+  }
+  
+  // Set defaults without waiting
+  setFirestoreData(pathSegments, defaultData);
+  return defaultData;
 }
 
-function setTasksToLS(tasks) {
-  localStorage.setItem(getKey(TASKS_KEY), JSON.stringify(tasks));
+async function setFirestoreData(pathSegments, data) {
+  if (!currentUserId) {
+    console.warn("[API] setFirestoreData skipped: No currentUserId", pathSegments);
+    return;
+  }
+  const payload = Array.isArray(data) ? { items: data } : data;
+  try {
+    console.log(`[API] setFirestoreData: Saving to path [${pathSegments.join(", ")}]...`, payload);
+    // DO NOT AWAIT. This prevents UI freezing when offline or adblocked. Firestore queues it locally.
+    setDoc(getRef(...pathSegments), payload).catch(err => {
+      console.error(`[API ERROR] setFirestoreData failed in background for path [${pathSegments.join(", ")}]:`, err);
+    });
+    console.log(`[API] setFirestoreData: Success (queued) for path [${pathSegments.join(", ")}]`);
+  } catch (err) {
+    console.error(`[API ERROR] setFirestoreData failed for path [${pathSegments.join(", ")}]:`, err);
+  }
 }
 
+// ============ TASKS API ============
 export const tasksAPI = {
   async getAll() {
-    return getTasksFromLS();
+    console.log("[TASKS API] getAll() called");
+    return await getFirestoreData(["workspace", "tasks"], []);
   },
 
   async create(task) {
-    const tasks = getTasksFromLS();
+    console.log("[TASKS API] create() called with:", task);
+    const tasks = await this.getAll();
     const id = Date.now();
 
     const h = Number(task.hrs) || 0;
@@ -52,12 +105,14 @@ export const tasksAPI = {
     };
 
     tasks.push(newTask);
-    setTasksToLS(tasks);
+    await setFirestoreData(["workspace", "tasks"], tasks);
+    console.log("[TASKS API] create() successful, new task id:", id);
     return newTask;
   },
 
   async update(id, task) {
-    let tasks = getTasksFromLS();
+    console.log(`[TASKS API] update() called for id ${id} with:`, task);
+    let tasks = await this.getAll();
 
     tasks = tasks.map((t) => {
       if (t.id !== id) return t;
@@ -80,19 +135,50 @@ export const tasksAPI = {
       };
     });
 
-    setTasksToLS(tasks);
+    await setFirestoreData(["workspace", "tasks"], tasks);
+    console.log(`[TASKS API] update() successful for id ${id}`);
     return tasks.find((t) => t.id === id);
   },
 
   async delete(id) {
-    let tasks = getTasksFromLS();
+    console.log(`[TASKS API] delete() called for id ${id}`);
+    let tasks = await this.getAll();
     tasks = tasks.filter((t) => t.id !== id);
-    setTasksToLS(tasks);
+    await setFirestoreData(["workspace", "tasks"], tasks);
+    console.log(`[TASKS API] delete() successful for id: ${id}`);
     return true;
   },
 
+  async deleteAll() {
+    const newTasks = Array(10).fill(null).map((_, index) => ({
+      id: Date.now() + index,
+      date: new Date().toLocaleDateString(),
+      task: "",
+      hrs: 0,
+      min: 0,
+      total_min: 0,
+      final_time: 0,
+      cu_link: "",
+      type: "",
+      status: "",
+      bug_type: "",
+      is_valid: null,
+      valid_time: 0,
+      invalid_time: 0,
+    }));
+    
+    // DO NOT AWAIT, background write
+    setFirestoreData(["workspace", "tasks"], newTasks).catch(err => {
+      console.error("[API ERROR] setFirestoreData failed in background for path [workspace, tasks]:", err);
+    });
+    
+    console.log(`[TASKS API] deleteAll() successful, reset to 10 blank tasks`);
+    return newTasks;
+  },
+
   async createMultiple(tasksArr) {
-    let tasks = getTasksFromLS();
+    console.log(`[TASKS API] createMultiple() called to add ${tasksArr.length} tasks`);
+    let tasks = await this.getAll();
     const newTasks = tasksArr.map((task, index) => ({
       id: Date.now() + index,
       date: task.date || "",
@@ -110,87 +196,67 @@ export const tasksAPI = {
       invalid_time: 0,
     }));
     tasks = tasks.concat(newTasks);
-    setTasksToLS(tasks);
+    await setFirestoreData(["workspace", "tasks"], tasks);
+    console.log(`[TASKS API] createMultiple() successful`);
     return newTasks;
   },
 };
 
-// ============ DISCUSSION API (localStorage) ============
-const DISCUSSION_KEY = "discussion";
-
+// ============ DISCUSSION API ============
 export const discussionAPI = {
   async get() {
-    let discussion = JSON.parse(localStorage.getItem(getKey(DISCUSSION_KEY)));
-    if (!discussion) {
-      discussion = {
-        id: 1,
-        hrs: 0,
-        min: 0,
-        note: "General discussion / meetings / calls",
-      };
-      localStorage.setItem(getKey(DISCUSSION_KEY), JSON.stringify(discussion));
-    }
-    return discussion;
+    return await getFirestoreData(["workspace", "discussion"], {
+      id: 1,
+      hrs: 0,
+      min: 0,
+      note: "General discussion / meetings / calls",
+    });
   },
 
   async update(id, discussion) {
     const updated = { ...discussion, id };
-    localStorage.setItem(getKey(DISCUSSION_KEY), JSON.stringify(updated));
+    setFirestoreData(["workspace", "discussion"], updated);
     return updated;
   },
 };
 
-// ============ MR ISSUE API (localStorage) ============
-const MR_ISSUE_KEY = "mr_issue";
-
+// ============ MR ISSUE API ============
 export const mrIssueAPI = {
   async get() {
-    let mrIssue = JSON.parse(localStorage.getItem(getKey(MR_ISSUE_KEY)));
-    if (!mrIssue) {
-      mrIssue = {
-        id: 1,
-        hrs: 0,
-        min: 0,
-        note: "MR Issues / review / fixing",
-      };
-      localStorage.setItem(getKey(MR_ISSUE_KEY), JSON.stringify(mrIssue));
-    }
-    return mrIssue;
+    return await getFirestoreData(["workspace", "mrIssue"], {
+      id: 1,
+      hrs: 0,
+      min: 0,
+      note: "MR Issues / review / fixing",
+    });
   },
 
   async update(id, mrIssue) {
     const updated = { ...mrIssue, id };
-    localStorage.setItem(getKey(MR_ISSUE_KEY), JSON.stringify(updated));
+    setFirestoreData(["workspace", "mrIssue"], updated);
     return updated;
   },
 };
 
-// ============ TESTING API (localStorage) ============
-const TESTING_KEY = "testing";
-const BUGS_KEY = "bugs";
-
+// ============ TESTING API ============
 export const testingAPI = {
   async get() {
-    let testing = JSON.parse(localStorage.getItem(getKey(TESTING_KEY)));
-    if (!testing) {
-      testing = {
-        id: 1,
-        testing_hrs: 0,
-        testing_min: 0,
-        testing_module: "",
-        test_case_scenario: "",
-        bug_founded_module: "",
-      };
-      localStorage.setItem(getKey(TESTING_KEY), JSON.stringify(testing));
-    }
-    const bugs = JSON.parse(localStorage.getItem(getKey(BUGS_KEY)) || "[]").filter(
-      (b) => b.testing_id === testing.id
-    );
-    return { ...testing, bugs };
+    const testing = await getFirestoreData(["workspace", "testing"], {
+      id: 1,
+      testing_hrs: 0,
+      testing_min: 0,
+      testing_module: "",
+      test_case_scenario: "",
+      bug_founded_module: "",
+    });
+    
+    const bugs = await getFirestoreData(["workspace", "bugs"], []);
+    const filteredBugs = bugs.filter((b) => b.testing_id === testing.id);
+    return { ...testing, bugs: filteredBugs };
   },
 
   async update(id, testing) {
-    const current = JSON.parse(localStorage.getItem(getKey(TESTING_KEY)) || "{}");
+    const current = await getFirestoreData(["workspace", "testing"], {});
     const updated = {
       ...current,
       id,
@@ -200,140 +266,156 @@ export const testingAPI = {
       test_case_scenario: testing.testCaseScenario ?? testing.test_case_scenario ?? "",
       bug_founded_module: testing.bugFoundedModule ?? testing.bug_founded_module ?? "",
     };
-    localStorage.setItem(getKey(TESTING_KEY), JSON.stringify(updated));
+    setFirestoreData(["workspace", "testing"], updated);
     return updated;
   },
 };
 
-// ============ BUGS API (localStorage) ============
+// ============ BUGS API ============
 export const bugsAPI = {
   async create(testingId, bug) {
-    let bugs = JSON.parse(localStorage.getItem(getKey(BUGS_KEY)) || "[]");
+    let bugs = await getFirestoreData(["workspace", "bugs"], []);
     const id = Date.now();
     const newBug = { ...bug, id, testing_id: testingId };
     bugs.push(newBug);
-    localStorage.setItem(getKey(BUGS_KEY), JSON.stringify(bugs));
+    setFirestoreData(["workspace", "bugs"], bugs);
     return newBug;
   },
 
   async update(id, bug) {
-    let bugs = JSON.parse(localStorage.getItem(getKey(BUGS_KEY)) || "[]");
+    let bugs = await getFirestoreData(["workspace", "bugs"], []);
     bugs = bugs.map((b) => (b.id === id ? { ...b, ...bug } : b));
-    localStorage.setItem(getKey(BUGS_KEY), JSON.stringify(bugs));
+    setFirestoreData(["workspace", "bugs"], bugs);
     return bugs.find((b) => b.id === id);
   },
 
   async delete(id) {
-    let bugs = JSON.parse(localStorage.getItem(getKey(BUGS_KEY)) || "[]");
+    let bugs = await getFirestoreData(["workspace", "bugs"], []);
     bugs = bugs.filter((b) => b.id !== id);
-    localStorage.setItem(getKey(BUGS_KEY), JSON.stringify(bugs));
+    setFirestoreData(["workspace", "bugs"], bugs);
     return true;
   },
 };
 
-// ============ OPTIONS API (localStorage) ============
-const TYPE_OPTIONS_KEY = "type_options";
-const STATUS_OPTIONS_KEY = "status_options";
-const BUG_TYPE_OPTIONS_KEY = "bug_type_options";
-
-function getOptionsFromLS(key, initialData) {
-  const data = localStorage.getItem(getKey(key));
-  if (!data) {
-    const options = initialData.map((name, i) => ({ id: Date.now() + i, name }));
-    setOptionsToLS(key, options);
-    return options;
-  }
-  return JSON.parse(data);
-}
-
-function setOptionsToLS(key, options) {
-  localStorage.setItem(getKey(key), JSON.stringify(options));
-}
-
+// ============ OPTIONS API ============
 export const optionsAPI = {
-  async getTypeOptions() { return getOptionsFromLS(TYPE_OPTIONS_KEY, initialTypeOptions); },
+  async getTypeOptions() { return await getFirestoreData(["options", "types"], initialTypeOptions.map((name, i) => ({ id: Date.now() + i, name }))); },
   async addTypeOption(name) {
-    const options = getOptionsFromLS(TYPE_OPTIONS_KEY, initialTypeOptions);
+    const options = await this.getTypeOptions();
     const newOption = { id: Date.now(), name };
     options.push(newOption);
-    setOptionsToLS(TYPE_OPTIONS_KEY, options);
+    setFirestoreData(["options", "types"], options);
     return newOption;
   },
   async updateTypeOption(id, name) {
-    let options = getOptionsFromLS(TYPE_OPTIONS_KEY, initialTypeOptions);
+    let options = await this.getTypeOptions();
     options = options.map((o) => (o.id === id ? { ...o, name } : o));
-    setOptionsToLS(TYPE_OPTIONS_KEY, options);
+    setFirestoreData(["options", "types"], options);
     return options.find((o) => o.id === id);
   },
   async deleteTypeOption(id) {
-    let options = getOptionsFromLS(TYPE_OPTIONS_KEY, initialTypeOptions);
+    let options = await this.getTypeOptions();
     options = options.filter((o) => o.id !== id);
-    setOptionsToLS(TYPE_OPTIONS_KEY, options);
+    setFirestoreData(["options", "types"], options);
     return true;
   },
 
-  async getStatusOptions() { return getOptionsFromLS(STATUS_OPTIONS_KEY, initialStatusOptions); },
+  async getStatusOptions() { return await getFirestoreData(["options", "statuses"], initialStatusOptions.map((name, i) => ({ id: Date.now() + i, name }))); },
   async addStatusOption(name) {
-    const options = getOptionsFromLS(STATUS_OPTIONS_KEY, initialStatusOptions);
+    const options = await this.getStatusOptions();
     const newOption = { id: Date.now(), name };
     options.push(newOption);
-    setOptionsToLS(STATUS_OPTIONS_KEY, options);
+    setFirestoreData(["options", "statuses"], options);
     return newOption;
   },
   async updateStatusOption(id, name) {
-    let options = getOptionsFromLS(STATUS_OPTIONS_KEY, initialStatusOptions);
+    let options = await this.getStatusOptions();
     options = options.map((o) => (o.id === id ? { ...o, name } : o));
-    setOptionsToLS(STATUS_OPTIONS_KEY, options);
+    setFirestoreData(["options", "statuses"], options);
     return options.find((o) => o.id === id);
   },
   async deleteStatusOption(id) {
-    let options = getOptionsFromLS(STATUS_OPTIONS_KEY, initialStatusOptions);
+    let options = await this.getStatusOptions();
     options = options.filter((o) => o.id !== id);
-    setOptionsToLS(STATUS_OPTIONS_KEY, options);
+    setFirestoreData(["options", "statuses"], options);
     return true;
   },
 
-  async getBugTypeOptions() { return getOptionsFromLS(BUG_TYPE_OPTIONS_KEY, initialBugTypeOptions); },
+  async getBugTypeOptions() { return await getFirestoreData(["options", "bugTypes"], initialBugTypeOptions.map((name, i) => ({ id: Date.now() + i, name }))); },
   async addBugTypeOption(name) {
-    const options = getOptionsFromLS(BUG_TYPE_OPTIONS_KEY, initialBugTypeOptions);
+    const options = await this.getBugTypeOptions();
     const newOption = { id: Date.now(), name };
     options.push(newOption);
-    setOptionsToLS(BUG_TYPE_OPTIONS_KEY, options);
+    setFirestoreData(["options", "bugTypes"], options);
     return newOption;
   },
   async updateBugTypeOption(id, name) {
-    let options = getOptionsFromLS(BUG_TYPE_OPTIONS_KEY, initialBugTypeOptions);
+    let options = await this.getBugTypeOptions();
     options = options.map((o) => (o.id === id ? { ...o, name } : o));
-    setOptionsToLS(BUG_TYPE_OPTIONS_KEY, options);
+    setFirestoreData(["options", "bugTypes"], options);
     return options.find((o) => o.id === id);
   },
   async deleteBugTypeOption(id) {
-    let options = getOptionsFromLS(BUG_TYPE_OPTIONS_KEY, initialBugTypeOptions);
+    let options = await this.getBugTypeOptions();
     options = options.filter((o) => o.id !== id);
-    setOptionsToLS(BUG_TYPE_OPTIONS_KEY, options);
+    setFirestoreData(["options", "bugTypes"], options);
     return true;
   },
 };
 
-// ============ SNAPSHOTS/HISTORY API (localStorage) ============
-const SNAPSHOTS_KEY = "daily_snapshots";
-
+// ============ SNAPSHOTS/HISTORY API ============
 export const snapshotsAPI = {
   async getAll() {
-    return JSON.parse(localStorage.getItem(getKey(SNAPSHOTS_KEY)) || "[]");
+    console.log("[SNAPSHOTS API] getAll() called");
+    if (!currentUserId) return [];
+    try {
+      const snapshotsCol = collection(db, "users", currentUserId, "snapshots");
+      const snapshotDocs = await Promise.race([
+        getDocs(snapshotsCol),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("TIMEOUT")), 1000))
+      ]);
+      return snapshotDocs.docs.map(doc => doc.data());
+    } catch (err) {
+      console.warn("[SNAPSHOTS API ERROR] getAll() network/timeout:", err.message);
+      return [];
+    }
   },
 
   async getByDate(date) {
-    const snapshots = JSON.parse(localStorage.getItem(getKey(SNAPSHOTS_KEY)) || "[]");
-    return snapshots.find((s) => s.snapshot_date === date) || null;
+    console.log(`[SNAPSHOTS API] getByDate() called for date ${date}`);
+    if (!currentUserId) return null;
+    try {
+      const snapDoc = await Promise.race([
+        getDoc(getRef("snapshots", date)),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("TIMEOUT")), 1000))
+      ]);
+      return snapDoc.exists() ? snapDoc.data() : null;
+    } catch (err) {
+      console.warn(`[SNAPSHOTS API ERROR] getByDate() network/timeout for date ${date}:`, err.message);
+      try {
+        const cacheSnap = await getDocFromCache(getRef("snapshots", date));
+        return cacheSnap.exists() ? cacheSnap.data() : null;
+      } catch (cacheErr) {
+        return null;
+      }
+    }
   },
 
   async save(snapshotData, customDate) {
+    console.log("[SNAPSHOTS API] save() called for date:", customDate);
+    if (!currentUserId) {
+      console.warn("[SNAPSHOTS API] save() aborted: no currentUserId");
+      return;
+    }
     const targetDate = customDate || new Date().toISOString().split("T")[0];
-    let snapshots = JSON.parse(localStorage.getItem(getKey(SNAPSHOTS_KEY)) || "[]");
-    let existing = snapshots.find((s) => s.snapshot_date === targetDate);
+    
+    try {
+      const existing = await this.getByDate(targetDate) || {
+        id: Date.now(),
+        snapshot_date: targetDate,
+        created_at: new Date().toISOString(),
+      };
 
-    if (existing) {
       Object.assign(existing, {
         tasks_data: snapshotData.tasks,
         discussion_data: snapshotData.discussion,
@@ -342,61 +424,78 @@ export const snapshotsAPI = {
         total_stats: snapshotData.stats,
         updated_at: new Date().toISOString(),
       });
-    } else {
-      existing = {
-        id: Date.now(),
-        snapshot_date: targetDate,
-        tasks_data: snapshotData.tasks,
-        discussion_data: snapshotData.discussion,
-        mrIssue_data: snapshotData.mrIssue,
-        testing_data: snapshotData.testing,
-        total_stats: snapshotData.stats,
-        created_at: new Date().toISOString(),
-      };
-      snapshots.push(existing);
-    }
 
-    localStorage.setItem(getKey(SNAPSHOTS_KEY), JSON.stringify(snapshots));
-    return existing;
+      console.log(`[SNAPSHOTS API] Saving snapshot to firestore for date ${targetDate}...`);
+      // DO NOT AWAIT. This prevents UI freezing when offline or adblocked.
+      setDoc(getRef("snapshots", targetDate), existing).catch(err => {
+        console.error(`[SNAPSHOTS API ERROR] save() failed in background for date ${targetDate}:`, err);
+      });
+      console.log(`[SNAPSHOTS API] save() successful (queued) for date ${targetDate}`);
+      return existing;
+    } catch (err) {
+      console.error(`[SNAPSHOTS API ERROR] save() failed for date ${targetDate}:`, err);
+      throw err;
+    }
   },
 
   async delete(id) {
-    let snapshots = JSON.parse(localStorage.getItem(getKey(SNAPSHOTS_KEY)) || "[]");
-    snapshots = snapshots.filter((s) => s.id !== id);
-    localStorage.setItem(getKey(SNAPSHOTS_KEY), JSON.stringify(snapshots));
-    return true;
+    if (!currentUserId) return false;
+    // Find snapshot by id (since doc name is date, we need to find it)
+    const snapshots = await this.getAll();
+    const target = snapshots.find(s => s.id === id);
+    if (target) {
+      await deleteDoc(getRef("snapshots", target.snapshot_date));
+      return true;
+    }
+    return false;
   },
 };
 
-// ============ WORKSPACE API (localStorage swap) ============
+// ============ WORKSPACE API ============
 export const workspaceAPI = {
   async loadWorkspace(date) {
-    const snap = await snapshotsAPI.getByDate(date);
-    if (snap) {
-      localStorage.setItem(getKey(TASKS_KEY), JSON.stringify(snap.tasks_data || []));
-      localStorage.setItem(getKey(DISCUSSION_KEY), JSON.stringify(snap.discussion_data || {}));
-      localStorage.setItem(getKey(MR_ISSUE_KEY), JSON.stringify(snap.mrIssue_data || {}));
-      
-      const testData = snap.testing_data || {};
-      const bugs = testData.bugs || [];
-      const testWithoutBugs = { ...testData };
-      delete testWithoutBugs.bugs;
-
-      localStorage.setItem(getKey(TESTING_KEY), JSON.stringify(testWithoutBugs));
-      localStorage.setItem(getKey(BUGS_KEY), JSON.stringify(bugs));
-    } else {
-      localStorage.setItem(getKey(TASKS_KEY), JSON.stringify([]));
-      localStorage.setItem(getKey(DISCUSSION_KEY), JSON.stringify({
-        id: 1, hrs: 0, min: 0, note: "General discussion / meetings / calls"
-      }));
-      localStorage.setItem(getKey(MR_ISSUE_KEY), JSON.stringify({
-        id: 1, hrs: 0, min: 0, note: "MR Issues / review / fixing"
-      }));
-      localStorage.setItem(getKey(TESTING_KEY), JSON.stringify({
-        id: 1, testing_hrs: 0, testing_min: 0, testing_module: "", test_case_scenario: "", bug_founded_module: ""
-      }));
-      localStorage.setItem(getKey(BUGS_KEY), JSON.stringify([]));
+    console.log(`[WORKSPACE API] loadWorkspace() called for date ${date}`);
+    if (!currentUserId) {
+      console.warn("[WORKSPACE API] loadWorkspace aborted: no currentUserId");
+      return false;
     }
-    return true;
+    
+    try {
+      const snap = await snapshotsAPI.getByDate(date);
+      
+      if (snap) {
+        console.log(`[WORKSPACE API] Snapshot found for date ${date}. Restoring data...`);
+        await setFirestoreData(["workspace", "tasks"], snap.tasks_data || []);
+        await setFirestoreData(["workspace", "discussion"], snap.discussion_data || {});
+        await setFirestoreData(["workspace", "mrIssue"], snap.mrIssue_data || {});
+        
+        const testData = snap.testing_data || {};
+        const bugs = testData.bugs || [];
+        const testWithoutBugs = { ...testData };
+        delete testWithoutBugs.bugs;
+
+        await setFirestoreData(["workspace", "testing"], testWithoutBugs);
+        await setFirestoreData(["workspace", "bugs"], bugs);
+        console.log(`[WORKSPACE API] Workspace restored from snapshot successfully.`);
+      } else {
+        console.log(`[WORKSPACE API] No snapshot for date ${date}. Initializing fresh workspace...`);
+        await setFirestoreData(["workspace", "tasks"], []);
+        await setFirestoreData(["workspace", "discussion"], {
+          id: 1, hrs: 0, min: 0, note: "General discussion / meetings / calls"
+        });
+        await setFirestoreData(["workspace", "mrIssue"], {
+          id: 1, hrs: 0, min: 0, note: "MR Issues / review / fixing"
+        });
+        await setFirestoreData(["workspace", "testing"], {
+          id: 1, testing_hrs: 0, testing_min: 0, testing_module: "", test_case_scenario: "", bug_founded_module: ""
+        });
+        await setFirestoreData(["workspace", "bugs"], []);
+        console.log(`[WORKSPACE API] Fresh workspace initialized successfully.`);
+      }
+      return true;
+    } catch (err) {
+      console.error(`[WORKSPACE API ERROR] loadWorkspace failed for date ${date}:`, err);
+      throw err;
+    }
   }
 };

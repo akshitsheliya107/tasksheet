@@ -9,8 +9,11 @@ import {
   mrIssueAPI,
 } from "../services/api";
 import toast from "react-hot-toast";
+import { useAuth } from "../context/AuthContext";
+import debounce from "lodash.debounce";
 
 export function useTasks() {
+  const { currentUser } = useAuth();
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -46,21 +49,23 @@ const transformTask = (task) => ({
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currentUser]);
 
   const createTask = async (task) => {
     try {
       const data = await tasksAPI.create(task);
       const newTask = transformTask(data);
+      // Append the new task to the end
       setTasks((prev) => [...prev, newTask]);
       return newTask;
     } catch (err) {
+      console.error("[useTasks] createTask error:", err);
       toast.error("Failed to create task");
       throw err;
     }
   };
 
-  const createDefaultTasks = async (count = 4) => {
+  const createDefaultTasks = async (count = 10) => {
     try {
       const defaultTasks = Array(count)
         .fill(null)
@@ -70,9 +75,11 @@ const transformTask = (task) => ({
           hrs: 0,
           min: 0,
         }));
-      const data = await tasksAPI.createMultiple(defaultTasks);
-      setTasks(data.map(transformTask));
+      await tasksAPI.createMultiple(defaultTasks);
+      // Fetch tasks again to ensure perfect sync with Firestore
+      await fetchTasks();
     } catch (err) {
+      console.error("[useTasks] createDefaultTasks error:", err);
       toast.error("Failed to create default tasks");
       throw err;
     }
@@ -95,14 +102,30 @@ const transformTask = (task) => ({
       await tasksAPI.delete(id);
       setTasks((prev) => prev.filter((t) => t.id !== id));
     } catch (err) {
+      console.error("[useTasks] deleteTask error:", err);
       toast.error("Failed to delete task");
       throw err;
     }
   };
 
+  const deleteAllTasks = async () => {
+    try {
+      const emptyTasks = await tasksAPI.deleteAll();
+      setTasks(emptyTasks.map(transformTask));
+    } catch (err) {
+      console.error("[useTasks] deleteAllTasks error:", err);
+      toast.error("Failed to delete all tasks");
+      throw err;
+    }
+  };
+
   useEffect(() => {
-    fetchTasks();
-  }, [fetchTasks]);
+    if (currentUser) {
+      fetchTasks();
+    } else {
+      setTasks([]);
+    }
+  }, [fetchTasks, currentUser]);
 
   return {
     tasks,
@@ -113,11 +136,13 @@ const transformTask = (task) => ({
     createDefaultTasks,
     updateTask,
     deleteTask,
+    deleteAllTasks,
     setTasks,
   };
 }
 
 export function useDiscussion() {
+  const { currentUser } = useAuth();
   const [discussion, setDiscussion] = useState({
     id: null,
     hrs: 0,
@@ -143,27 +168,40 @@ export function useDiscussion() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currentUser]);
 
-  const updateDiscussion = async (field, value) => {
+  const debouncedUpdate = useCallback(
+    debounce(async (id, updated) => {
+      try {
+        await discussionAPI.update(id, updated);
+      } catch (err) {
+        toast.error("Failed to update discussion");
+      }
+    }, 1000),
+    []
+  );
+
+  const updateDiscussion = (field, value) => {
     const updated = { ...discussion, [field]: value };
     setDiscussion(updated);
-
-    try {
-      await discussionAPI.update(discussion.id, updated);
-    } catch (err) {
-      toast.error("Failed to update discussion");
+    if (discussion.id) {
+      debouncedUpdate(discussion.id, updated);
     }
   };
 
   useEffect(() => {
-    fetchDiscussion();
-  }, [fetchDiscussion]);
+    if (currentUser) {
+      fetchDiscussion();
+    } else {
+      setDiscussion({ id: null, hrs: 0, min: 0, note: "" });
+    }
+  }, [fetchDiscussion, currentUser]);
 
   return { discussion, loading, fetchDiscussion, updateDiscussion, setDiscussion };
 }
 
 export function useMrIssue() {
+  const { currentUser } = useAuth();
   const [mrIssue, setMrIssue] = useState({
     id: null,
     hrs: 0,
@@ -189,27 +227,40 @@ export function useMrIssue() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currentUser]);
 
-  const updateMrIssue = async (field, value) => {
+  const debouncedUpdate = useCallback(
+    debounce(async (id, updated) => {
+      try {
+        await mrIssueAPI.update(id, updated);
+      } catch (err) {
+        toast.error("Failed to update MR Issue");
+      }
+    }, 1000),
+    []
+  );
+
+  const updateMrIssue = (field, value) => {
     const updated = { ...mrIssue, [field]: value };
     setMrIssue(updated);
-
-    try {
-      await mrIssueAPI.update(mrIssue.id, updated);
-    } catch (err) {
-      toast.error("Failed to update MR Issue");
+    if (mrIssue.id) {
+      debouncedUpdate(mrIssue.id, updated);
     }
   };
 
   useEffect(() => {
-    fetchMrIssue();
-  }, [fetchMrIssue]);
+    if (currentUser) {
+      fetchMrIssue();
+    } else {
+      setMrIssue({ id: null, hrs: 0, min: 0, note: "" });
+    }
+  }, [fetchMrIssue, currentUser]);
 
   return { mrIssue, loading, fetchMrIssue, updateMrIssue, setMrIssue };
 }
 
 export function useTesting() {
+  const { currentUser } = useAuth();
   const [testing, setTesting] = useState({
     id: null,
     testingTime: { hrs: 0, min: 0 },
@@ -239,16 +290,24 @@ export function useTesting() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currentUser]);
 
-  const updateTesting = async (updates) => {
+  const debouncedUpdate = useCallback(
+    debounce(async (id, updated) => {
+      try {
+        await testingAPI.update(id, updated);
+      } catch (err) {
+        toast.error("Failed to update testing");
+      }
+    }, 1000),
+    []
+  );
+
+  const updateTesting = (updates) => {
     const updated = { ...testing, ...updates };
     setTesting(updated);
-
-    try {
-      await testingAPI.update(testing.id, updated);
-    } catch (err) {
-      toast.error("Failed to update testing");
+    if (testing.id) {
+      debouncedUpdate(testing.id, updated);
     }
   };
 
@@ -291,8 +350,12 @@ export function useTesting() {
   };
 
   useEffect(() => {
-    fetchTesting();
-  }, [fetchTesting]);
+    if (currentUser) {
+      fetchTesting();
+    } else {
+      setTesting({ id: null, testingTime: { hrs: 0, min: 0 }, testingModule: "", testCaseScenario: "", bugFoundedModule: "", bugs: [] });
+    }
+  }, [fetchTesting, currentUser]);
 
   return {
     testing,
@@ -307,6 +370,7 @@ export function useTesting() {
 }
 
 export function useOptions() {
+  const { currentUser } = useAuth();
   const [typeOptions, setTypeOptions] = useState([]);
   const [statusOptions, setStatusOptions] = useState([]);
   const [bugTypeOptions, setBugTypeOptions] = useState([]);
@@ -328,7 +392,7 @@ export function useOptions() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currentUser]);
 
   const addTypeOption = async (name) => {
     try {
@@ -418,8 +482,10 @@ export function useOptions() {
   };
 
   useEffect(() => {
-    fetchOptions();
-  }, [fetchOptions]);
+    if (currentUser) {
+      fetchOptions();
+    }
+  }, [fetchOptions, currentUser]);
 
   return {
     typeOptions,
@@ -439,6 +505,7 @@ export function useOptions() {
 }
 
 export function useSnapshots() {
+  const { currentUser } = useAuth();
   const [snapshots, setSnapshots] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -452,7 +519,7 @@ export function useSnapshots() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currentUser]);
 
   const getSnapshot = async (date) => {
     try {
@@ -468,6 +535,7 @@ export function useSnapshots() {
       await snapshotsAPI.save(data, customDate);
       await fetchSnapshots();
     } catch (err) {
+      console.error("[useSnapshots] saveSnapshot error:", err);
       toast.error("Failed to save report");
       throw err;
     }
@@ -484,8 +552,12 @@ export function useSnapshots() {
   };
 
   useEffect(() => {
-    fetchSnapshots();
-  }, [fetchSnapshots]);
+    if (currentUser) {
+      fetchSnapshots();
+    } else {
+      setSnapshots([]);
+    }
+  }, [fetchSnapshots, currentUser]);
 
   return {
     snapshots,
