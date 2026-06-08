@@ -332,40 +332,51 @@ useEffect(() => {
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setIsDarkMode(!isDarkMode)}
-                className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-gray-600 dark:text-gray-300"
-                title="Toggle Dark Mode"
-              >
-                {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
-              </button>
-              <div className="w-px h-6 bg-gray-300 dark:bg-gray-700 mx-1"></div>
+          {/* Inside header div, replace the dark mode button section */}
 
-              <div className="w-px h-6 bg-gray-300 dark:bg-gray-700 mx-1"></div>
-              <Popconfirm
-                title="Log Out"
-                description="Are you sure you want to log out?"
-                onConfirm={async () => {
-                  try {
-                    await logout();
-                    message.success("Logged out successfully");
-                  } catch(e) {
-                    message.error("Failed to log out");
-                  }
-                }}
-                okText="Yes"
-                cancelText="No"
-                placement="bottomRight"
-              >
-                <button
-                  className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                >
-                  <LogOut size={16} />
-                  Logout
-                </button>
-              </Popconfirm>
-            </div>
+<div className="flex items-center gap-3">
+  {/* ✅ DARK/LIGHT MODE TOGGLE - Enhanced */}
+  <button
+    onClick={() => setIsDarkMode(!isDarkMode)}
+    className={`relative p-2.5 rounded-xl transition-all duration-300 ${
+      isDarkMode 
+        ? "bg-slate-700 hover:bg-slate-600 text-amber-300 shadow-lg shadow-amber-500/20" 
+        : "bg-gray-100 hover:bg-gray-200 text-indigo-600 shadow-md"
+    }`}
+    title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+  >
+    {isDarkMode ? (
+      <Sun size={18} className="animate-spin-slow" />
+    ) : (
+      <Moon size={18} />
+    )}
+  </button>
+  
+  <div className="w-px h-6 bg-gray-300 dark:bg-gray-700 mx-1"></div>
+  
+  <Popconfirm
+    title="Log Out"
+    description="Are you sure you want to log out?"
+    onConfirm={async () => {
+      try {
+        await logout();
+        message.success("Logged out successfully");
+      } catch(e) {
+        message.error("Failed to log out");
+      }
+    }}
+    okText="Yes"
+    cancelText="No"
+    placement="bottomRight"
+  >
+    <button
+      className="flex items-center gap-2 px-3 py-2 text-sm font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all"
+    >
+      <LogOut size={16} />
+      Logout
+    </button>
+  </Popconfirm>
+</div>
           </div>
 
           <div className="p-6 flex-1 overflow-x-hidden">{renderView()}</div>

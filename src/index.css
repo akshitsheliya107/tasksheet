@@ -141,3 +141,20 @@ input[type="number"]:hover::-webkit-outer-spin-button {
   background-color: #10b981 !important;
   color: #ffffff !important;
 }
+
+/* Smooth theme transitions */
+* {
+  transition: background-color 0.3s ease, 
+              border-color 0.3s ease, 
+              color 0.2s ease;
+}
+
+/* Slow spin animation for sun icon */
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 8s linear infinite;
+}
