@@ -7,6 +7,7 @@ import {
   optionsAPI,
   snapshotsAPI,
   mrIssueAPI,
+  setUserId,
 } from "../services/api";
 import toast from "react-hot-toast";
 import { useAuth } from "../context/AuthContext";
@@ -14,6 +15,7 @@ import debounce from "lodash.debounce";
 
 export function useTasks() {
   const { currentUser } = useAuth();
+  if (currentUser) setUserId(currentUser.uid);
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -143,6 +145,7 @@ const transformTask = (task) => ({
 
 export function useDiscussion() {
   const { currentUser } = useAuth();
+  if (currentUser) setUserId(currentUser.uid);
   const [discussion, setDiscussion] = useState({
     id: null,
     hrs: 0,
@@ -202,6 +205,7 @@ export function useDiscussion() {
 
 export function useMrIssue() {
   const { currentUser } = useAuth();
+  if (currentUser) setUserId(currentUser.uid);
   const [mrIssue, setMrIssue] = useState({
     id: null,
     hrs: 0,
@@ -261,6 +265,7 @@ export function useMrIssue() {
 
 export function useTesting() {
   const { currentUser } = useAuth();
+  if (currentUser) setUserId(currentUser.uid);
   const [testing, setTesting] = useState({
     id: null,
     testingTime: { hrs: 0, min: 0 },
@@ -371,6 +376,7 @@ export function useTesting() {
 
 export function useOptions() {
   const { currentUser } = useAuth();
+  if (currentUser) setUserId(currentUser.uid);
   const [typeOptions, setTypeOptions] = useState([]);
   const [statusOptions, setStatusOptions] = useState([]);
   const [bugTypeOptions, setBugTypeOptions] = useState([]);
@@ -506,6 +512,7 @@ export function useOptions() {
 
 export function useSnapshots() {
   const { currentUser } = useAuth();
+  if (currentUser) setUserId(currentUser.uid);
   const [snapshots, setSnapshots] = useState([]);
   const [loading, setLoading] = useState(true);
 

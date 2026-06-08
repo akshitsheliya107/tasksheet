@@ -137,8 +137,27 @@ export default function OutputFormat({ tasks = [], testing = {}, discussion = {}
     const generateTasksOutput = () => {
       const groups = {};
       const uncategorized = [];
+      let globalRevisionMin = 0;
+      let globalFunctionalityMin = 0;
+      let globalDevRepliedMin = 0;
 
       tasks.forEach((t) => {
+        if (!t.task || t.task.trim() === "") return; // Skip empty tasks
+        
+        const totalMin = getTaskMinutes(t);
+        const bugType = String(t.bugType || t.bug_type || "").trim().toLowerCase();
+        const status = String(t.status || "").trim().toLowerCase();
+
+        if (bugType === "revision") {
+          globalRevisionMin += totalMin;
+        } else if (bugType === "functionality") {
+          globalFunctionalityMin += totalMin;
+        }
+
+        if (status === "dev replied" || status === "dev replayed") {
+          globalDevRepliedMin += totalMin;
+        }
+
         const normalizedType = normalizeType(t.type || "");
 
         if (!normalizedType) {
@@ -194,6 +213,7 @@ export default function OutputFormat({ tasks = [], testing = {}, discussion = {}
         });
       };
 
+
       orderedCategories.forEach((cat) => {
         renderGroup(cat, groups[cat]);
       });
@@ -205,6 +225,12 @@ export default function OutputFormat({ tasks = [], testing = {}, discussion = {}
 
       if (uncategorized.length > 0) {
         renderGroup("Uncategorized", uncategorized);
+      }
+          if (globalRevisionMin > 0 || globalFunctionalityMin > 0 || globalDevRepliedMin > 0) {
+        blocks.push({
+          type: "global_summary",
+          text: `Time Spent for revision — ${formatOnlyMinutes(globalRevisionMin)} > ${formatDecimalHours(globalRevisionMin)}\nTime Spent for Functionality — ${formatOnlyMinutes(globalFunctionalityMin)} > ${formatDecimalHours(globalFunctionalityMin)}\nTime Spent for dev replied - ${formatOnlyMinutes(globalDevRepliedMin)} > ${formatDecimalHours(globalDevRepliedMin)}`
+        });
       }
     };
 
@@ -305,7 +331,13 @@ export default function OutputFormat({ tasks = [], testing = {}, discussion = {}
 
     const generateTestingOutput = () => {
       blocks.push({ type: "divider", text: `------------------------------------------------------------------------` });
-      blocks.push({ type: "testing_header", text: `${testing.testingModule || "N/A"} -> testing on dev/beta >>> \n\n\n**Testing Module => ${testing.testingModule || "N/A"}\n\nand\n\n**Test case scenario => ${testing.testCaseScenario || "N/A"}\n\nand\n\n**bug founded module : - ${testing.bugFoundedModule || "N/A"}` });
+      
+      const tHr = Number(testing?.testingTime?.hrs) || Number(testing?.testing_hrs) || 0;
+      const tMin = Number(testing?.testingTime?.min) || Number(testing?.testing_min) || 0;
+      const totalTestingMin = tHr * 60 + tMin;
+      const timeStr = totalTestingMin > 0 ? `${formatOnlyMinutes(totalTestingMin)} >> ${formatDecimalHours(totalTestingMin)}` : "";
+
+      blocks.push({ type: "testing_header", text: `${testing.testingModule || "N/A"} -> testing on dev/beta >>> ${timeStr}\n\n\n**Testing Module => ${testing.testingModule || "N/A"}\n\nand\n\n**Test case scenario => ${testing.testCaseScenario || "N/A"}\n\nand\n\n**bug founded module : - ${testing.bugFoundedModule || "N/A"}` });
 
       if (testing.bugs && testing.bugs.length > 0) {
         testing.bugs.forEach((bug) => {

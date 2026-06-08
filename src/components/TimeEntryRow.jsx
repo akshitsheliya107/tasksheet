@@ -527,7 +527,17 @@ export default function TimeEntryRow({
       {!readOnly && (
         <td className="px-3 py-3 text-center">
           <button
-            onClick={() => onDelete(entry.id)}
+            onClick={() => {
+              Modal.confirm({
+                title: 'Delete Task',
+                content: 'Are you sure you want to delete this task? This action cannot be undone.',
+                okText: 'Delete',
+                cancelText: 'Cancel',
+                okType: 'danger',
+                centered: true,
+                onOk: () => onDelete(entry.id)
+              });
+            }}
             className="p-2 text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-all duration-200 hover:scale-110"
             title="Delete task"
           >

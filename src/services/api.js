@@ -10,6 +10,7 @@ export const setUserId = (uid) => {
 
 // Helper to get document reference
 const getRef = (...pathSegments) => doc(db, "users", currentUserId, ...pathSegments);
+const getLocalKey = (...pathSegments) => `tasksheet_${currentUserId}_${pathSegments.join("_")}`;
 
 // Helper to get data from a document, with default fallback
 async function getFirestoreData(pathSegments, defaultData) {
@@ -29,7 +30,9 @@ async function getFirestoreData(pathSegments, defaultData) {
 
     if (snap.exists()) {
       const data = snap.data();
-      return Array.isArray(defaultData) ? data.items || defaultData : data;
+      const finalData = Array.isArray(defaultData) ? data.items || defaultData : data;
+      try { localStorage.setItem(getLocalKey(...pathSegments), JSON.stringify(finalData)); } catch(e){}
+      return finalData;
     }
   } catch (err) {
     console.warn(`[API ERROR] getFirestoreData network/timeout for path [${pathSegments.join(", ")}]:`, err.message);
@@ -45,6 +48,15 @@ async function getFirestoreData(pathSegments, defaultData) {
     } catch (cacheErr) {
        // Cache empty or failed
     }
+    
+    // Try localStorage fallback
+    try {
+      const localStr = localStorage.getItem(getLocalKey(...pathSegments));
+      if (localStr) {
+        console.log(`[API] getFirestoreData: Success (from localStorage) for path [${pathSegments.join(", ")}]`);
+        return JSON.parse(localStr);
+      }
+    } catch(e) {}
   }
   
   // Set defaults without waiting
@@ -58,6 +70,14 @@ async function setFirestoreData(pathSegments, data) {
     return;
   }
   const payload = Array.isArray(data) ? { items: data } : data;
+  
+  if (currentUserId) {
+    try {
+      // For localStorage, store the final resolved data structure so reading is easier
+      localStorage.setItem(getLocalKey(...pathSegments), JSON.stringify(Array.isArray(data) ? data : payload));
+    } catch (e) {}
+  }
+
   try {
     console.log(`[API] setFirestoreData: Saving to path [${pathSegments.join(", ")}]...`, payload);
     // DO NOT AWAIT. This prevents UI freezing when offline or adblocked. Firestore queues it locally.
@@ -374,9 +394,15 @@ export const snapshotsAPI = {
         getDocs(snapshotsCol),
         new Promise((_, reject) => setTimeout(() => reject(new Error("TIMEOUT")), 1000))
       ]);
-      return snapshotDocs.docs.map(doc => doc.data());
+      const snaps = snapshotDocs.docs.map(doc => doc.data());
+      try { localStorage.setItem(getLocalKey("snapshots_all"), JSON.stringify(snaps)); } catch(e){}
+      return snaps;
     } catch (err) {
       console.warn("[SNAPSHOTS API ERROR] getAll() network/timeout:", err.message);
+      try {
+        const localSnaps = localStorage.getItem(getLocalKey("snapshots_all"));
+        if (localSnaps) return JSON.parse(localSnaps);
+      } catch(e) {}
       return [];
     }
   },
@@ -389,15 +415,24 @@ export const snapshotsAPI = {
         getDoc(getRef("snapshots", date)),
         new Promise((_, reject) => setTimeout(() => reject(new Error("TIMEOUT")), 1000))
       ]);
-      return snapDoc.exists() ? snapDoc.data() : null;
+      if (snapDoc.exists()) {
+        const data = snapDoc.data();
+        try { localStorage.setItem(getLocalKey("snapshots", date), JSON.stringify(data)); } catch(e){}
+        return data;
+      }
+      return null;
     } catch (err) {
       console.warn(`[SNAPSHOTS API ERROR] getByDate() network/timeout for date ${date}:`, err.message);
       try {
         const cacheSnap = await getDocFromCache(getRef("snapshots", date));
-        return cacheSnap.exists() ? cacheSnap.data() : null;
+        if (cacheSnap.exists()) return cacheSnap.data();
       } catch (cacheErr) {
-        return null;
       }
+      try {
+        const localSnap = localStorage.getItem(getLocalKey("snapshots", date));
+        if (localSnap) return JSON.parse(localSnap);
+      } catch(e) {}
+      return null;
     }
   },
 
@@ -425,6 +460,8 @@ export const snapshotsAPI = {
         updated_at: new Date().toISOString(),
       });
 
+      try { localStorage.setItem(getLocalKey("snapshots", targetDate), JSON.stringify(existing)); } catch(e){}
+
       console.log(`[SNAPSHOTS API] Saving snapshot to firestore for date ${targetDate}...`);
       // DO NOT AWAIT. This prevents UI freezing when offline or adblocked.
       setDoc(getRef("snapshots", targetDate), existing).catch(err => {
@@ -444,6 +481,12 @@ export const snapshotsAPI = {
     const snapshots = await this.getAll();
     const target = snapshots.find(s => s.id === id);
     if (target) {
+      try {
+         const newSnaps = snapshots.filter(s => s.id !== id);
+         localStorage.setItem(getLocalKey("snapshots_all"), JSON.stringify(newSnaps));
+         localStorage.removeItem(getLocalKey("snapshots", target.snapshot_date));
+      } catch(e){}
+
       await deleteDoc(getRef("snapshots", target.snapshot_date));
       return true;
     }
