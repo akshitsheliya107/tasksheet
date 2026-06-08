@@ -313,7 +313,7 @@ export default function TimeEntryRow({
             filterOption={(input, option) =>
               (option?.searchLabel ?? '').toLowerCase().includes(input.toLowerCase())
             }
-            dropdownRender={(menu) => (
+            popupRender={(menu) => (
               <>
                 {menu}
                 <Divider style={{ margin: '4px 0' }} />
@@ -382,7 +382,7 @@ export default function TimeEntryRow({
             filterOption={(input, option) =>
               (option?.searchLabel ?? '').toLowerCase().includes(input.toLowerCase())
             }
-            dropdownRender={(menu) => (
+            popupRender={(menu) => (
               <>
                 {menu}
                 <Divider style={{ margin: '4px 0' }} />
@@ -451,7 +451,7 @@ export default function TimeEntryRow({
             filterOption={(input, option) =>
               (option?.searchLabel ?? '').toLowerCase().includes(input.toLowerCase())
             }
-            dropdownRender={(menu) => (
+            popupRender={(menu) => (
               <>
                 {menu}
                 <Divider style={{ margin: '4px 0' }} />
@@ -554,7 +554,7 @@ export default function TimeEntryRow({
           okText="Add Option"
           okButtonProps={{ className: "bg-emerald-600 hover:bg-emerald-700" }}
           centered
-          destroyOnClose
+          destroyOnHidden
         >
           <div className="py-4">
             <Input 

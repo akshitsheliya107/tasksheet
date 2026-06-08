@@ -24,6 +24,7 @@ export default function Dashboard({
   mrIssue,
   testing,
   typeOptions,
+    isLoading = false, 
   statusOptions,
   bugTypeOptions,
   onAddTypeOption,
@@ -53,14 +54,17 @@ export default function Dashboard({
   const [saving, setSaving] = useState(false);
   const [initialized, setInitialized] = useState(false);
 
-  useEffect(() => {
-    if (!initialized) {
-      if (tasks.length === 0) {
-        onCreateDefaultTasks(10);
-      }
-      setInitialized(true);
+useEffect(() => {
+  // Loading chal rahi hai to wait karo
+  if (isLoading) return;
+  
+  if (!initialized) {
+    setInitialized(true);
+    if (tasks.length === 0) {
+      onCreateDefaultTasks(10);
     }
-  }, [initialized, tasks.length, onCreateDefaultTasks]);
+  }
+}, [initialized, isLoading, tasks.length, onCreateDefaultTasks]);
 
   const tasksStats = useMemo(() => {
     return tasks.reduce(

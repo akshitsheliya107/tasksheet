@@ -27,11 +27,11 @@ function App() {
   const { currentUser, logout } = useAuth();
   const [authView, setAuthView] = useState("login");
 
-  useEffect(() => {
-    if (currentUser) {
-      setUserId(currentUser.uid);
-    }
-  }, [currentUser]);
+useEffect(() => {
+  if (currentUser) {
+    console.log("[APP] Current user:", currentUser.uid);
+  }
+}, [currentUser]);
 
   const [activeView, setActiveView] = useState("dashboard");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -248,6 +248,7 @@ function App() {
         return (
           <Dashboard
             tasks={tasks}
+                  isLoading={tasksLoading}
             discussion={discussion}
             mrIssue={mrIssue}
             testing={testing}
