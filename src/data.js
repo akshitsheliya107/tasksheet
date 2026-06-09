@@ -76,13 +76,15 @@ export const initialDiscussion = {
 // ✅ ADDED "Panel Bugs" and "NF"
 export const TYPE_OPTIONS = [
   "Panel Bugs",
+  "Alpha Bugs",
   "NF",
+  "internal bug",
   "module testing",
   "helping and call",
   "valid bugs",
   "invalid/dev. reply bugs",
   "live bug",
-  "internal bug",
+  "Suggestion",
   "redesign/revision count",
   "other",
   "qa replied",
@@ -97,12 +99,14 @@ export const STATUS_OPTIONS = [
   "MR",
   "Done",
   "On Hold",
-  "Dev Replayed",
+  "Dev Replied",
   "Debug and transfer",
   "Done On Beta",
   "Done On Dev",
   "Transfer To Leader",
   "not replicate",
+  "Review",
+  "Testing",
 ];
 
 export const BUG_TYPE_OPTIONS = [
@@ -110,11 +114,13 @@ export const BUG_TYPE_OPTIONS = [
   "Revision",
   "Invalid",
   "Duplicate",
-  "New Future",
+  "New Feature",
   "No Changes Needed",
   "Native Behavior",
   "Unable to replicate",
-  "Transfer",
+  "Debug & Transfer",
+  "BE side pending work",
+  "UI side pending work", 
 ];
 
 export const initialTesting = {
@@ -160,8 +166,14 @@ export const initialStatusOptions = [
   "MR",
   "Done",
   "On Hold",
-  "Dev Replayed",
+  "Dev Replied",
   "Debug and transfer",
+  "Done On Beta",
+  "Done On Dev",
+  "Transfer To Leader",
+  "not replicate",
+  "Review",
+  "Testing",
 ];
 
 export const initialBugTypeOptions = [
@@ -169,9 +181,11 @@ export const initialBugTypeOptions = [
   "Revision",
   "Invalid",
   "Duplicate",
-  "New Future",
+  "New Feature",
   "No Changes Needed",
   "Native Behavior",
   "Unable to replicate",
-  "Transfer",
+  "Debug & Transfer",
+  "BE side pending work",
+  "UI side pending work",
 ];
