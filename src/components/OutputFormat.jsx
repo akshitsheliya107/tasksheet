@@ -260,6 +260,17 @@ export default function OutputFormat({ tasks = [], testing = {}, discussion = {}
       blocks.push({ type: "mrIssue", text: `=> ${note} >> ${minDisplay} >> ${hrDecimal}` });
     };
 
+    const generateTestingSummaryOutput = () => {
+      const tHr = Number(testing?.testingTime?.hrs) || Number(testing?.testing_hrs) || 0;
+      const tMin = Number(testing?.testingTime?.min) || Number(testing?.testing_min) || 0;
+      const totalMin = tHr * 60 + tMin;
+      
+      const minDisplay = formatOnlyMinutes(totalMin);
+      const hrDecimal = formatDecimalHours(totalMin);
+
+      blocks.push({ type: "testingSummary", text: `=> testing on dev/beta >>> ${minDisplay} >> ${hrDecimal}` });
+    };
+
     const generatePanelUpdateOutput = () => {
       const panelTasks = tasks.filter(
         (t) => normalizeType(t.type || "") === "Panel Bugs"
@@ -367,6 +378,7 @@ export default function OutputFormat({ tasks = [], testing = {}, discussion = {}
     generateTasksOutput();
     generateDiscussionOutput();
     generateMrIssueOutput();
+    generateTestingSummaryOutput();
     generatePanelUpdateOutput();
     generateTestingOutput();
 

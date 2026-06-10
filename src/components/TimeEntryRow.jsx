@@ -305,6 +305,7 @@ export default function TimeEntryRow({
             size="middle"
             allowClear
             showSearch
+            optionLabelProp="value"
             optionFilterProp="label"
             options={(typeOptions || []).map((opt) => ({
               label: (
@@ -374,6 +375,7 @@ export default function TimeEntryRow({
             size="middle"
             allowClear
             showSearch
+            optionLabelProp="value"
             optionFilterProp="label"
             options={(statusOptions || []).map((opt) => ({
               label: (
@@ -443,6 +445,7 @@ export default function TimeEntryRow({
             size="middle"
             allowClear
             showSearch
+            optionLabelProp="value"
             optionFilterProp="label"
             options={(bugTypeOptions || []).map((opt) => ({
               label: (
