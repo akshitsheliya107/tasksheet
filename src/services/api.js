@@ -976,6 +976,29 @@ export const clickupSyncAPI = {
   },
 
   /**
+   * Fetch all teams and user info from ClickUp.
+   * Used to auto-populate team dropdown in settings.
+   */
+  async listTeams(token) {
+    try {
+      const response = await fetch(getFunctionUrl("clickup-list-teams"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token }),
+      });
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("[ClickUp] List teams failed:", error);
+      return {
+        success: false,
+        error: "Network error. Make sure Netlify Functions are running.",
+      };
+    }
+  },
+
+  /**
    * Fetch tasks from ClickUp for a specific date.
    * Reads config from Firestore and passes to Netlify function.
    */
@@ -1001,7 +1024,7 @@ export const clickupSyncAPI = {
           date: date,
           listMapping: config.listMapping || [],
           panelCustomFieldName: config.panelCustomFieldName || "Panel",
-          bugTypeCustomFieldName: config.bugTypeCustomFieldName || "Bug Type",
+          bugTypeCustomFieldName: config.bugTypeCustomFieldName || "🐞Bug Type",
           defaultType: config.defaultType || "Internal Bug",
         }),
       });

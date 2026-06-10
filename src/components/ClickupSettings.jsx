@@ -81,6 +81,8 @@ export default function ClickupSettings({ typeOptions = [] }) {
   const [config, setConfig] = useState(null);
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState(null);
+  const [loadingTeams, setLoadingTeams] = useState(false);
+  const [availableTeams, setAvailableTeams] = useState([]);
 
   useEffect(() => {
     loadConfig();
@@ -201,6 +203,48 @@ export default function ClickupSettings({ typeOptions = [] }) {
       toast.success("Rules reset to default");
     } catch (error) {
       toast.error("Failed to reset rules");
+    }
+  };
+
+  const handleLoadTeams = async () => {
+    if (!config.apiToken) {
+      toast.error("Please enter API token first");
+      return;
+    }
+
+    setLoadingTeams(true);
+    setAvailableTeams([]);
+
+    try {
+      const result = await clickupSyncAPI.listTeams(config.apiToken);
+
+      if (result.success) {
+        setAvailableTeams(result.teams || []);
+        
+        // Auto-fill user ID
+        if (result.user?.id && !config.userId) {
+          setConfig(prev => ({ ...prev, userId: String(result.user.id) }));
+          toast.success("User ID auto-filled");
+        }
+
+        // Auto-select if only one team
+        if (result.teams?.length === 1) {
+          const team = result.teams[0];
+          setConfig(prev => ({ ...prev, teamId: team.id }));
+          toast.success(`Team auto-selected: ${team.name}`);
+        } else if (result.teams?.length > 1) {
+          toast.success(`Found ${result.teams.length} teams. Please select one.`);
+        } else {
+          toast.error("No teams found for this account");
+        }
+      } else {
+        toast.error(result.error || "Failed to load teams");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to load teams");
+    } finally {
+      setLoadingTeams(false);
     }
   };
 
@@ -365,33 +409,74 @@ export default function ClickupSettings({ typeOptions = [] }) {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-1">
-              <Users size={14} /> Team ID
+              <Users size={14} /> Team / Workspace
             </label>
-            <Input
-              value={config.teamId}
-              onChange={(e) => setConfig({ ...config, teamId: e.target.value })}
-              placeholder="e.g. 1234567"
-              type="number"
-              className="cu-input"
-            />
-            <span className="text-xs text-gray-500 dark:text-gray-400 mt-1 block">
-              Found in URL: app.clickup.com/&#123;TEAM_ID&#125;/...
-            </span>
+            
+            {availableTeams.length > 0 ? (
+              <Select
+                value={config.teamId || undefined}
+                onChange={(val) => setConfig({ ...config, teamId: val })}
+                placeholder="Select your team"
+                className="w-full cu-select"
+                options={availableTeams.map(t => ({
+                  value: t.id,
+                  label: `${t.name} (ID: ${t.id})`,
+                }))}
+              />
+            ) : (
+              <div className="flex gap-2">
+                <Input
+                  value={config.teamId || ""}
+                  onChange={(e) => setConfig({ ...config, teamId: e.target.value })}
+                  placeholder="Click 'Load Teams' button →"
+                  className="cu-input flex-1"
+                  readOnly={!config.teamId}
+                />
+                <Button
+                  type="primary"
+                  onClick={handleLoadTeams}
+                  loading={loadingTeams}
+                  disabled={!config.apiToken}
+                  icon={<RefreshCw size={14} />}
+                  className="bg-blue-600 hover:bg-blue-700 flex-shrink-0"
+                >
+                  {loadingTeams ? "Loading..." : "Load Teams"}
+                </Button>
+              </div>
+            )}
+            
+            <div className="flex items-center justify-between mt-1">
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {availableTeams.length > 0 
+                  ? `${availableTeams.length} team${availableTeams.length !== 1 ? 's' : ''} available`
+                  : "Click 'Load Teams' to fetch from ClickUp"}
+              </span>
+              {availableTeams.length > 0 && (
+                <button 
+                  onClick={handleLoadTeams}
+                  className="text-xs text-emerald-600 hover:text-emerald-700"
+                >
+                  Reload teams
+                </button>
+              )}
+            </div>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-1">
               <User size={14} /> User ID
+              {config.userId && (
+                <span className="ml-1 text-[10px] text-emerald-600 font-semibold">✓ AUTO</span>
+              )}
             </label>
             <Input
-              value={config.userId}
+              value={config.userId || ""}
               onChange={(e) => setConfig({ ...config, userId: e.target.value })}
-              placeholder="e.g. 9876543"
-              type="number"
+              placeholder="Auto-fills when you load teams"
               className="cu-input"
             />
             <span className="text-xs text-gray-500 dark:text-gray-400 mt-1 block">
-              Your ClickUp user ID (numeric)
+              Auto-detected from your API token (or enter manually)
             </span>
           </div>
         </div>
@@ -492,7 +577,7 @@ export default function ClickupSettings({ typeOptions = [] }) {
               className="cu-input"
             />
             <span className="text-xs text-gray-500 dark:text-gray-400 mt-1 block">
-              ClickUp custom field name for bug type (New Feature, Revision, etc.)
+              ClickUp custom field name for bug type (New Feature, Revision, etc.🐞)
             </span>
           </div>
         </div>
