@@ -1,4 +1,8 @@
 import { useState, useMemo, useEffect } from "react";
+import { Download, Clock as ClockIcon } from "lucide-react";
+import { timeAgo } from "../utils/timeUtils";
+import { clickupConfigAPI } from "../services/api";
+import ClickupFetchModal from "./ClickupFetchModal";
 import {
   Plus,
   RefreshCw,
@@ -53,6 +57,30 @@ export default function Dashboard({
   const [showMrIssue, setShowMrIssue] = useState(true);
   const [saving, setSaving] = useState(false);
   const [initialized, setInitialized] = useState(false);
+  const [showClickupModal, setShowClickupModal] = useState(false);
+  const [lastSyncedAt, setLastSyncedAt] = useState(null);
+  const [, forceUpdate] = useState(0);
+
+  // Load last sync time
+  useEffect(() => {
+    const loadSyncTime = async () => {
+      try {
+        const config = await clickupConfigAPI.get();
+        setLastSyncedAt(config.lastSyncedAt);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    loadSyncTime();
+  }, [tasks]); // re-fetch when tasks change
+
+  // Update relative time every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      forceUpdate(n => n + 1);
+    }, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
 useEffect(() => {
   // Loading chal rahi hai to wait karo
@@ -216,15 +244,23 @@ useEffect(() => {
             <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-1">
               Daily Time Tracking
             </h1>
-            <p className="text-gray-500 dark:text-gray-400 text-sm flex items-center gap-2">
-              <Calendar size={14} />
-              {new Date().toLocaleDateString("en-US", {
-                weekday: "long",
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
-            </p>
+            <div className="flex flex-col gap-1">
+              <p className="text-gray-500 dark:text-gray-400 text-sm flex items-center gap-2">
+                <Calendar size={14} />
+                {new Date().toLocaleDateString("en-US", {
+                  weekday: "long",
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </p>
+              {lastSyncedAt && (
+                <p className="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-1.5">
+                  <ClockIcon size={11} />
+                  <span>ClickUp synced {timeAgo(lastSyncedAt)}</span>
+                </p>
+              )}
+            </div>
           </div>
 
           <div className="flex flex-wrap gap-3">
@@ -234,6 +270,13 @@ useEffect(() => {
             >
               <RefreshCw size={16} />
               Refresh
+            </button>
+            <button
+              onClick={() => setShowClickupModal(true)}
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg text-sm font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105"
+            >
+              <Download size={16} />
+              Fetch from ClickUp
             </button>
             <button
               onClick={() => setShowAddModal(true)}
@@ -609,6 +652,13 @@ useEffect(() => {
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
         onAdd={onCreateTask}
+      />
+      
+      <ClickupFetchModal
+        isOpen={showClickupModal}
+        onClose={() => setShowClickupModal(false)}
+        existingTasksCount={tasks.filter(t => t.task && t.task.trim() !== "").length}
+        onSyncComplete={onRefresh}
       />
     </div>
   );

@@ -244,7 +244,7 @@ export default function OutputFormat({ tasks = [], testing = {}, discussion = {}
       const hrDecimal = formatDecimalHours(totalMin);
       const note = discussion?.note || "Discussion";
 
-      blocks.push({ type: "discussion", text: `[Discussion]\n\n=> ${note} >> ${minDisplay} >> ${hrDecimal}` });
+      blocks.push({ type: "discussion", text: `=> ${note} >> ${minDisplay} >> ${hrDecimal}` });
     };
 
     const generateMrIssueOutput = () => {
@@ -257,7 +257,7 @@ export default function OutputFormat({ tasks = [], testing = {}, discussion = {}
       const hrDecimal = formatDecimalHours(totalMin);
       const note = mrIssue?.note || "MR Issues";
 
-      blocks.push({ type: "mrIssue", text: `[MR Issue]\n\n=> ${note} >> ${minDisplay} >> ${hrDecimal}` });
+      blocks.push({ type: "mrIssue", text: `=> ${note} >> ${minDisplay} >> ${hrDecimal}` });
     };
 
     const generatePanelUpdateOutput = () => {

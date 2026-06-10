@@ -21,22 +21,30 @@ export function useTasks() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const transformTask = (task) => ({
-    id: task.id,
-    date: task.date || "",
-    task: task.task || "",
-    hrs: task.hrs || 0,
-    min: task.min || 0,
-    totalMin: task.total_min !== undefined ? task.total_min : task.totalMin || 0,
-    finalTime: task.final_time !== undefined ? task.final_time : task.finalTime || 0,
-    cuLink: task.cu_link !== undefined ? task.cu_link : task.cuLink || "",
-    type: task.type || "",
-    status: task.status || "",
-    bugType: task.bug_type !== undefined ? task.bug_type : task.bugType || "",
-    isValid: task.is_valid !== undefined ? task.is_valid : task.isValid !== undefined ? task.isValid : null,
-    validTime: task.valid_time !== undefined ? task.valid_time : task.validTime || 0,
-    invalidTime: task.invalid_time !== undefined ? task.invalid_time : task.invalidTime || 0,
-  });
+const transformTask = (task) => ({
+  id: task.id,
+  date: task.date || "",
+  task: task.task || "",
+  hrs: task.hrs || 0,
+  min: task.min || 0,
+  totalMin: task.total_min !== undefined ? task.total_min : task.totalMin || 0,
+  finalTime: task.final_time !== undefined ? task.final_time : task.finalTime || 0,
+  cuLink: task.cu_link !== undefined ? task.cu_link : task.cuLink || "",
+  type: task.type || "",
+  status: task.status || "",
+  bugType: task.bug_type !== undefined ? task.bug_type : task.bugType || "",
+  isValid: task.is_valid !== undefined ? task.is_valid : task.isValid !== undefined ? task.isValid : null,
+  validTime: task.valid_time !== undefined ? task.valid_time : task.validTime || 0,
+  invalidTime: task.invalid_time !== undefined ? task.invalid_time : task.invalidTime || 0,
+  // ✅ Preserve ClickUp metadata (don't strip these!)
+  clickup_task_id: task.clickup_task_id || "",
+  clickup_list_name: task.clickup_list_name || "",
+  source: task.source || "",
+  synced_at: task.synced_at || null,
+  manually_edited: task.manually_edited || false,
+  // Also keep cu_link snake_case version for compatibility
+  cu_link: task.cu_link || task.cuLink || "",
+});
 
   const fetchTasks = useCallback(async () => {
     if (!userReady) {
@@ -89,7 +97,34 @@ export function useTasks() {
   const updateTask = async (id, task) => {
     try {
       await tasksAPI.update(id, task);
-      setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...task } : t)));
+      setTasks((prev) => prev.map((t) => {
+        if (t.id !== id) return t;
+        
+        // Detect if user changed any editable field (manual edit)
+        const editableFields = ['date', 'task', 'hrs', 'min', 'cuLink', 'cu_link', 'type', 'status', 'bugType', 'bug_type'];
+        let isManualEdit = false;
+        
+        for (const field of editableFields) {
+          if (task[field] !== undefined && String(task[field] ?? '') !== String(t[field] ?? '')) {
+            isManualEdit = true;
+            break;
+          }
+        }
+        
+        return { 
+          ...t, 
+          ...task,
+          // Preserve ClickUp metadata in local state
+          clickup_task_id: t.clickup_task_id || task.clickup_task_id || "",
+          clickup_list_name: t.clickup_list_name || task.clickup_list_name || "",
+          source: t.source || task.source || "",
+          synced_at: t.synced_at || task.synced_at || null,
+          // Auto-flag manual edit
+          manually_edited: task.manually_edited !== undefined 
+            ? task.manually_edited 
+            : (isManualEdit ? true : (t.manually_edited || false)),
+        };
+      }));
     } catch (err) {
       toast.error("Failed to update task");
       throw err;

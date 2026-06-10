@@ -1,7 +1,8 @@
 import { 
   initialTypeOptions, 
   initialStatusOptions, 
-  initialBugTypeOptions 
+  initialBugTypeOptions,
+  initialClickupConfig
 } from "../data";
 import { db } from "../lib/firebase";
 import { 
@@ -175,6 +176,24 @@ export const tasksAPI = {
     let tasks = await this.getAll();
     tasks = tasks.map((t) => {
       if (t.id !== id) return t;
+      
+      // Detect if any user-editable field changed (compared to current value)
+      const editableFields = ['date', 'task', 'hrs', 'min', 'cu_link', 'cuLink', 'type', 'status', 'bug_type', 'bugType'];
+      let isManualEdit = false;
+      
+      for (const field of editableFields) {
+        if (task[field] !== undefined) {
+          const newVal = task[field];
+          const currentVal = field === 'cuLink' ? t.cu_link : 
+                             field === 'bugType' ? t.bug_type : 
+                             t[field];
+          if (String(newVal ?? '') !== String(currentVal ?? '')) {
+            isManualEdit = true;
+            break;
+          }
+        }
+      }
+      
       return {
         ...t,
         date: task.date !== undefined ? task.date : t.date,
@@ -194,6 +213,11 @@ export const tasksAPI = {
             : t.is_valid,
         valid_time: task.valid_time ?? task.validTime ?? t.valid_time,
         invalid_time: task.invalid_time ?? task.invalidTime ?? t.invalid_time,
+        // ✅ Auto-set manual edit flag if user changed editable fields
+        // (but don't override if explicitly passed as false from sync logic)
+        manually_edited: task.manually_edited !== undefined 
+          ? task.manually_edited 
+          : (isManualEdit ? true : t.manually_edited),
       };
     });
 
@@ -254,7 +278,145 @@ async createMultiple(tasksArr) {
   tasks = [...tasks, ...newTasks];
   saveToFirestore(["workspace", "tasks"], tasks);
   return newTasks;
-},}
+},
+
+  /**
+   * Sync tasks from ClickUp - either replace all or merge with existing.
+   * @param {Array} clickupTasks - Tasks fetched from ClickUp
+   * @param {string} mode - "replace" or "merge"
+   */
+  async syncFromClickup(clickupTasks, mode = "merge", conflictResolutions = {}) {
+    if (!Array.isArray(clickupTasks) || clickupTasks.length === 0) {
+      return { added: 0, updated: 0, skipped: 0, finalTasks: await this.getAll() };
+    }
+
+    const now = Date.now();
+    
+    // Normalize ClickUp tasks to our task format
+    const normalizedClickupTasks = clickupTasks.map((t, i) => ({
+      id: now + (i * 10),
+      date: t.date || "",
+      task: t.task || "",
+      hrs: Number(t.hrs) || 0,
+      min: Number(t.min) || 0,
+      total_min: Number(t.total_min) || 0,
+      final_time: Number(t.final_time) || 0,
+      cu_link: t.cu_link || "",
+      type: t.type || "",
+      status: t.status || "",
+      bug_type: t.bug_type || "",
+      is_valid: t.is_valid !== undefined ? t.is_valid : null,
+      valid_time: 0,
+      invalid_time: 0,
+      // ClickUp metadata
+      clickup_task_id: t.clickupTaskId || "",
+      clickup_list_name: t.clickupListName || "",
+      source: "clickup",
+      synced_at: t.synced_at || new Date().toISOString(),
+      manually_edited: false,
+    }));
+
+  if (mode === "replace") {
+  const existing = await this.getAll();
+  const manualOnly = existing.filter(t => 
+    !t.clickup_task_id && (t.task || "").trim() !== ""
+  );
+  // ✅ ClickUp tasks pehle (top), manual tasks baad me (bottom)
+  const finalTasks = [...normalizedClickupTasks, ...manualOnly];
+  saveToFirestore(["workspace", "tasks"], finalTasks);
+  
+  return {
+    added: normalizedClickupTasks.length,
+    updated: 0,
+    skipped: 0,
+    kept: manualOnly.length,
+    finalTasks,
+  };
+} else {
+  const existing = await this.getAll();
+  const existingByClickupId = {};
+  existing.forEach(t => {
+    if (t.clickup_task_id) {
+      existingByClickupId[t.clickup_task_id] = t;
+    }
+  });
+
+  let added = 0;
+  let updated = 0;
+  let skipped = 0;
+  const conflicts = [];
+
+  // ✅ Step 1: Separate tasks into categories
+  const newTasksToAdd = [];          // brand new from ClickUp (top)
+  const updatedExistingMap = {};     // existing tasks that get updated (preserve position)
+  
+  normalizedClickupTasks.forEach(newTask => {
+    const existingTask = existingByClickupId[newTask.clickup_task_id];
+    
+    if (!existingTask) {
+      // New task - will go on top
+      newTasksToAdd.push(newTask);
+      added++;
+    } else if (existingTask.manually_edited) {
+      // Check if user has provided a resolution for this conflict
+      const resolution = conflictResolutions[existingTask.clickup_task_id];
+      
+      if (resolution === "use_clickup") {
+        // Overwrite with ClickUp data
+        updatedExistingMap[existingTask.id] = {
+          ...newTask,
+          id: existingTask.id,
+          is_valid: existingTask.is_valid,
+          valid_time: existingTask.valid_time,
+          invalid_time: existingTask.invalid_time,
+          manually_edited: false, // reset flag
+        };
+        updated++;
+      } else if (resolution === "keep_manual") {
+        // Keep manual, don't update
+        skipped++;
+      } else {
+        // No resolution - it's a conflict, return it
+        skipped++;
+        conflicts.push({
+          existing: existingTask,
+          incoming: newTask,
+        });
+      }
+    } else {
+      // Update existing - preserve id, is_valid, and position
+      updatedExistingMap[existingTask.id] = {
+        ...newTask,
+        id: existingTask.id,
+        is_valid: existingTask.is_valid,
+        valid_time: existingTask.valid_time,
+        invalid_time: existingTask.invalid_time,
+      };
+      updated++;
+    }
+  });
+
+  // ✅ Step 2: Rebuild list
+  // - New ClickUp tasks at TOP
+  // - Then existing tasks (with updates applied) in original order
+  const existingWithUpdates = existing.map(t => 
+    updatedExistingMap[t.id] || t
+  );
+  
+  const merged = [...newTasksToAdd, ...existingWithUpdates];
+
+  saveToFirestore(["workspace", "tasks"], merged);
+  
+  return {
+    added,
+    updated,
+    skipped,
+    conflicts,
+    finalTasks: merged,
+  };
+}
+  },
+}
 
 // ════════════════════════════════════════════════════════════
 // DISCUSSION API
@@ -608,4 +770,256 @@ export const workspaceAPI = {
 
     return true;
   }
+};
+
+// ════════════════════════════════════════════════════════════
+// CLICKUP CONFIG API
+// ════════════════════════════════════════════════════════════
+export const clickupConfigAPI = {
+  /**
+   * Get ClickUp config for current user.
+   * Returns default config merged with stored data.
+   */
+  async get() {
+    const config = await getFirestoreData(
+      ["clickup", "config"],
+      initialClickupConfig
+    );
+
+    // Ensure all fields exist (backward compatibility)
+    return {
+      ...initialClickupConfig,
+      ...config,
+      listMapping:
+        Array.isArray(config?.listMapping) && config.listMapping.length > 0
+          ? config.listMapping
+          : initialClickupConfig.listMapping,
+    };
+  },
+
+  /**
+   * Partial update of ClickUp config.
+   * Auto-calculates isConfigured flag.
+   */
+  async update(updates) {
+    const current = await this.get();
+    const merged = { ...current, ...updates };
+    merged.isConfigured = Boolean(
+      merged.apiToken && merged.teamId && merged.userId
+    );
+    saveToFirestore(["clickup", "config"], merged);
+    return merged;
+  },
+
+  /**
+   * Replace entire config.
+   */
+  async save(config) {
+    const finalConfig = {
+      ...initialClickupConfig,
+      ...config,
+      isConfigured: Boolean(
+        config.apiToken && config.teamId && config.userId
+      ),
+    };
+    saveToFirestore(["clickup", "config"], finalConfig);
+    return finalConfig;
+  },
+
+  /**
+   * Check if user has completed ClickUp setup.
+   */
+  async isConfigured() {
+    const config = await this.get();
+    return Boolean(config.apiToken && config.teamId && config.userId);
+  },
+
+  /**
+   * Update last synced timestamp.
+   */
+  async markSynced() {
+    const current = await this.get();
+    const updated = {
+      ...current,
+      lastSyncedAt: new Date().toISOString(),
+    };
+    saveToFirestore(["clickup", "config"], updated);
+    return updated;
+  },
+
+  /**
+   * Reset config (disconnect ClickUp).
+   */
+  async reset() {
+    saveToFirestore(["clickup", "config"], initialClickupConfig);
+    return initialClickupConfig;
+  },
+
+  // ─── LIST MAPPING METHODS ───────────────────────────────
+
+  /**
+   * Add a new mapping rule.
+   */
+  async addMappingRule(rule) {
+    const config = await this.get();
+    const newRule = {
+      id: `rule_${Date.now()}`,
+      pattern: "",
+      matchType: "contains",
+      type: "Internal Bug",
+      statusSource: "main_status",
+      bugTypeSource: "custom_field",
+      enabled: true,
+      ...rule,
+    };
+    const updated = {
+      ...config,
+      listMapping: [...config.listMapping, newRule],
+    };
+    saveToFirestore(["clickup", "config"], updated);
+    return newRule;
+  },
+
+  /**
+   * Update an existing mapping rule.
+   */
+  async updateMappingRule(id, updates) {
+    const config = await this.get();
+    const updated = {
+      ...config,
+      listMapping: config.listMapping.map((r) =>
+        r.id === id ? { ...r, ...updates } : r
+      ),
+    };
+    saveToFirestore(["clickup", "config"], updated);
+    return updated.listMapping.find((r) => r.id === id);
+  },
+
+  /**
+   * Delete a mapping rule.
+   */
+  async deleteMappingRule(id) {
+    const config = await this.get();
+    const updated = {
+      ...config,
+      listMapping: config.listMapping.filter((r) => r.id !== id),
+    };
+    saveToFirestore(["clickup", "config"], updated);
+    return true;
+  },
+
+  /**
+   * Reorder mapping rules (drag-drop priority).
+   */
+  async reorderMappingRules(newOrder) {
+    const config = await this.get();
+    const updated = {
+      ...config,
+      listMapping: newOrder,
+    };
+    saveToFirestore(["clickup", "config"], updated);
+    return updated;
+  },
+
+  /**
+   * Reset mapping rules to defaults.
+   */
+  async resetMapping() {
+    const config = await this.get();
+    const updated = {
+      ...config,
+      listMapping: initialClickupConfig.listMapping,
+    };
+    saveToFirestore(["clickup", "config"], updated);
+    return updated;
+  },
+};
+
+// ════════════════════════════════════════════════════════════
+// CLICKUP SYNC API (calls Netlify Functions)
+// ════════════════════════════════════════════════════════════
+
+// Helper to determine the base URL for Netlify functions
+const getFunctionUrl = (functionName) => {
+  // In development with Netlify CLI: http://localhost:8888/.netlify/functions/
+  // In production: /.netlify/functions/
+  // Vite dev (no Netlify CLI): use /api/ prefix which gets proxied
+  
+  // Try both paths - production uses /.netlify/functions/
+  return `/.netlify/functions/${functionName}`;
+};
+
+export const clickupSyncAPI = {
+  /**
+   * Test ClickUp connection with provided credentials.
+   * Returns user info if successful.
+   */
+  async testConnection(token, teamId) {
+    try {
+      const response = await fetch(getFunctionUrl("clickup-test"), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ token, teamId }),
+      });
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("[ClickUp] Test connection failed:", error);
+      return {
+        success: false,
+        error: "Network error. Make sure Netlify Functions are running. (Run 'netlify dev' for local testing)",
+      };
+    }
+  },
+
+  /**
+   * Fetch tasks from ClickUp for a specific date.
+   * Reads config from Firestore and passes to Netlify function.
+   */
+  async syncFromClickup(date) {
+    try {
+      // Get config from Firestore
+      const config = await clickupConfigAPI.get();
+      
+      if (!config.isConfigured) {
+        return {
+          success: false,
+          error: "ClickUp is not configured. Please go to ClickUp Settings first.",
+        };
+      }
+
+      const response = await fetch(getFunctionUrl("clickup-sync"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          token: config.apiToken,
+          teamId: config.teamId,
+          userId: config.userId,
+          date: date,
+          listMapping: config.listMapping || [],
+          panelCustomFieldName: config.panelCustomFieldName || "Panel",
+          bugTypeCustomFieldName: config.bugTypeCustomFieldName || "Bug Type",
+          defaultType: config.defaultType || "Internal Bug",
+        }),
+      });
+
+      const data = await response.json();
+      
+      // Mark as synced if successful
+      if (data.success) {
+        await clickupConfigAPI.markSynced();
+      }
+      
+      return data;
+    } catch (error) {
+      console.error("[ClickUp] Sync failed:", error);
+      return {
+        success: false,
+        error: "Network error. Make sure Netlify Functions are running.",
+      };
+    }
+  },
 };

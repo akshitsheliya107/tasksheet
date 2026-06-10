@@ -182,17 +182,40 @@ export default function TimeEntryRow({
   return (
     <tr className={`${rowBg} hover:bg-emerald-50/50 dark:hover:bg-emerald-900/20 transition-all duration-200 animate-fadeIn`}>
       <td className="px-3 py-3 border-r border-gray-200 dark:border-gray-700">
-        <input
-          type="text"
-          value={localEntry.date || ""}
-          onChange={(e) => {
-            setLocalEntry({ ...localEntry, date: e.target.value });
-            triggerUpdate("date", e.target.value);
-          }}
-          className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all duration-200"
-          placeholder="DD/MM/YYYY"
-          disabled={readOnly}
-        />
+        <div className="flex flex-col gap-1.5">
+          <input
+            type="text"
+            value={localEntry.date || ""}
+            onChange={(e) => {
+              setLocalEntry({ ...localEntry, date: e.target.value });
+              triggerUpdate("date", e.target.value);
+            }}
+            className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all duration-200"
+            placeholder="DD/MM/YYYY"
+            disabled={readOnly}
+          />
+          <div className="flex justify-start">
+            {entry.clickup_task_id ? (
+              <span 
+                title={`Synced from ClickUp${entry.manually_edited ? ' • Manually edited' : ''}`}
+                className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                  entry.manually_edited
+                    ? "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400"
+                    : "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-400"
+                }`}
+              >
+                {entry.manually_edited ? "CU✎" : "CU"}
+              </span>
+            ) : entry.task && entry.task.trim() !== "" ? (
+              <span 
+                title="Manually added"
+                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-gray-100 text-gray-600 dark:bg-neutral-800 dark:text-neutral-400"
+              >
+                M
+              </span>
+            ) : null}
+          </div>
+        </div>
       </td>
 
       <td className="px-3 py-3 border-r border-gray-200 dark:border-gray-700">

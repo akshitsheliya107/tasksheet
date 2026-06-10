@@ -1,0 +1,19 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+  functions = "netlify/functions"
+
+[dev]
+  framework = "vite"
+  targetPort = 5173
+  port = 8888
+  autoLaunch = false
+
+[functions]
+  node_bundler = "esbuild"
+
+# Production-only SPA fallback (Netlify dev auto-handles Vite)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

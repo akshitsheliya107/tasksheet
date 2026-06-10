@@ -70,7 +70,7 @@ export const initialEntries = [
 export const initialDiscussion = {
   hrs: 0,
   min: 19,
-  note: "General discussion / meetings / calls",
+  note: "Discussion / meetings / calls",
 };
 
 // ✅ ADDED "Panel Bugs" and "NF"
@@ -189,3 +189,81 @@ export const initialBugTypeOptions = [
   "BE side pending work",
   "UI side pending work",
 ];
+
+// ════════════════════════════════════════════════════════════
+// CLICKUP INTEGRATION CONFIG
+// ════════════════════════════════════════════════════════════
+
+// Default list-to-type mapping rules
+// Order matters! First match wins (priority based).
+export const DEFAULT_CLICKUP_LIST_MAPPING = [
+  {
+    id: "rule_sprint",
+    pattern: "^sprint",           // regex: list name starts with "sprint"
+    matchType: "regex",
+    type: "NF",
+    statusSource: "panel_field",  // use "Panel" custom field for status
+    bugTypeSource: "none",         // NF doesn't have bug type
+    enabled: true,
+  },
+  {
+    id: "rule_panel",
+    pattern: "panel",
+    matchType: "contains",
+    type: "Panel Bugs",
+    statusSource: "panel_field",
+    bugTypeSource: "custom_field",
+    enabled: true,
+  },
+  {
+    id: "rule_alpha",
+    pattern: "alpha",
+    matchType: "contains",
+    type: "Alpha Bugs",
+    statusSource: "panel_field",
+    bugTypeSource: "custom_field",
+    enabled: true,
+  },
+  {
+    id: "rule_internal_qa",
+    pattern: "internal",
+    matchType: "contains",
+    type: "Internal Bug",
+    statusSource: "main_status",
+    bugTypeSource: "custom_field",
+    enabled: true,
+  },
+  {
+    id: "rule_setting",
+    pattern: "setting",
+    matchType: "contains",
+    type: "Internal Bug",
+    statusSource: "main_status",
+    bugTypeSource: "custom_field",
+    enabled: true,
+  },
+  {
+    id: "rule_modulewise",
+    pattern: "modulewise",
+    matchType: "contains",
+    type: "Internal Bug",
+    statusSource: "main_status",
+    bugTypeSource: "custom_field",
+    enabled: true,
+  },
+];
+
+// Default ClickUp config (empty - user fills in via Settings page later)
+export const initialClickupConfig = {
+  apiToken: "",
+  teamId: "",
+  userId: "",
+  listMapping: DEFAULT_CLICKUP_LIST_MAPPING,
+  defaultType: "Internal Bug",          // fallback if no rule matches
+  defaultStatusSource: "main_status",
+  defaultBugTypeSource: "custom_field",
+  panelCustomFieldName: "Panel",        // ClickUp custom field name for status
+  bugTypeCustomFieldName: "Bug Type",   // ClickUp custom field name for bug type
+  lastSyncedAt: null,
+  isConfigured: false,
+};

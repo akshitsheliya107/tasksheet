@@ -5,6 +5,7 @@ import {
   ChevronRight,
   Clock,
   Calendar,
+  Settings,
 } from "lucide-react";
 
 export default function Sidebar({
@@ -16,6 +17,7 @@ export default function Sidebar({
   const menuItems = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
     { id: "keka_timer", label: "Keka Timer", icon: Clock },
+    { id: "clickup_settings", label: "ClickUp Settings", icon: Settings },
     { id: "history", label: "History", icon: History },
   ];
 
