@@ -270,7 +270,7 @@ export default function ClickupFetchModal({
         )}
 
         {/* STEP 3: PREVIEW */}
-        {step === "preview" && fetchResult && (
+        {/* {step === "preview" && fetchResult && (
           <div className="space-y-4 py-2">
             <Alert
               type="success"
@@ -327,8 +327,79 @@ export default function ClickupFetchModal({
               </Button>
             </div>
           </div>
-        )}
+        )} */}
 
+{/* STEP 3: PREVIEW */}
+{step === "preview" && fetchResult && (
+  <div className="space-y-4 py-2">
+    <Alert
+      type="success"
+      showIcon
+      message={`Found ${fetchResult.tasks.length} task${fetchResult.tasks.length !== 1 ? 's' : ''}`}
+      description={`From ${fetchResult.rawTimeEntries} time entries on ${selectedDate.format("DD MMM YYYY")}`}
+    />
+
+    <div className="max-h-80 overflow-y-auto border border-gray-200 dark:border-neutral-800 rounded-lg">
+      <table className="w-full text-sm">
+        <thead className="bg-gray-50 dark:bg-neutral-900 sticky top-0">
+          <tr>
+            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600 dark:text-gray-300">Task</th>
+            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 w-24">Type</th>
+            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 w-24">Status</th>
+            {/* ✅ NEW: Bug Type column */}
+            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 w-28">Bug Type</th>
+            <th className="px-3 py-2 text-right text-xs font-semibold text-gray-600 dark:text-gray-300 w-16">Time</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-200 dark:divide-neutral-800">
+          {fetchResult.tasks.map((t, i) => (
+            <tr key={i} className="hover:bg-gray-50 dark:hover:bg-neutral-900">
+              <td className="px-3 py-2">
+                <p className="text-gray-800 dark:text-gray-200 line-clamp-2 max-w-xs" title={t.task}>
+                  {t.task}
+                </p>
+              </td>
+              <td className="px-3 py-2 text-xs">
+                <span className="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 rounded">
+                  {t.type || "—"}
+                </span>
+              </td>
+              <td className="px-3 py-2 text-xs text-gray-600 dark:text-gray-300">
+                {t.status || "—"}
+              </td>
+              {/* ✅ NEW: Bug Type cell */}
+              <td className="px-3 py-2 text-xs">
+                {t.bug_type ? (
+                  <span className="px-2 py-0.5 bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 rounded">
+                    {t.bug_type}
+                  </span>
+                ) : (
+                  <span className="text-gray-400">—</span>
+                )}
+              </td>
+              <td className="px-3 py-2 text-right text-xs font-mono text-gray-700 dark:text-gray-200">
+                {t.hrs}h {t.min}m
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    <div className="flex justify-end gap-2 pt-4 border-t border-gray-200 dark:border-neutral-800">
+      <Button onClick={() => setStep("config")}>Back</Button>
+      <Button 
+        type="primary" 
+        onClick={handleApply}
+        loading={loading}
+        icon={<CheckCircle size={14} />}
+        className="bg-emerald-600"
+      >
+        Apply {conflictMode === "replace" ? "(Replace)" : "(Merge)"}
+      </Button>
+    </div>
+  </div>
+)}
         {/* STEP 4: APPLYING */}
         {step === "applying" && (
           <div className="py-12 flex flex-col items-center gap-4">

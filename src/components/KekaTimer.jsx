@@ -638,14 +638,14 @@ export default function KekaTimer() {
         </div>
       )}
 
-      {/* FOOTER */}
+      {/* FOOTER
       <div className="mt-6 text-center">
         <div className="inline-block px-6 py-3 bg-white dark:bg-gradient-to-br dark:from-slate-900 dark:to-slate-800 rounded-2xl border border-gray-200 dark:border-slate-700/50 shadow-sm">
           <p className="text-sm font-bold bg-gradient-to-r from-cyan-500 to-indigo-600 dark:from-cyan-400 dark:to-indigo-500 bg-clip-text text-transparent">
             ✨ વીર માંગડો (લવલી પાનવાળી ગલી) ✨
           </p>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 }

@@ -1045,4 +1045,39 @@ export const clickupSyncAPI = {
       };
     }
   },
+
+  /**
+   * Discover ClickUp workspace structure - lists, custom fields, task types.
+   */
+  async discoverWorkspace() {
+    try {
+      const config = await clickupConfigAPI.get();
+      
+      if (!config.apiToken || !config.teamId) {
+        return {
+          success: false,
+          error: "API Token and Team ID required. Configure ClickUp Settings first.",
+        };
+      }
+
+      const response = await fetch(getFunctionUrl("clickup-discover"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          token: config.apiToken,
+          teamId: config.teamId,
+          userId: config.userId,
+        }),
+      });
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("[ClickUp] Discover failed:", error);
+      return {
+        success: false,
+        error: "Network error. Make sure Netlify Functions are running.",
+      };
+    }
+  },
 };

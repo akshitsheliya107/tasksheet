@@ -340,47 +340,47 @@ export default function OutputFormat({ tasks = [], testing = {}, discussion = {}
       blocks.push({ type: "panel_stats", text: statsText });
     };
 
-    const generateTestingOutput = () => {
-      blocks.push({ type: "divider", text: `------------------------------------------------------------------------` });
+    // const generateTestingOutput = () => {
+    //   blocks.push({ type: "divider", text: `------------------------------------------------------------------------` });
       
-      const tHr = Number(testing?.testingTime?.hrs) || Number(testing?.testing_hrs) || 0;
-      const tMin = Number(testing?.testingTime?.min) || Number(testing?.testing_min) || 0;
-      const totalTestingMin = tHr * 60 + tMin;
-      const timeStr = totalTestingMin > 0 ? `${formatOnlyMinutes(totalTestingMin)} >> ${formatDecimalHours(totalTestingMin)}` : "";
+    //   const tHr = Number(testing?.testingTime?.hrs) || Number(testing?.testing_hrs) || 0;
+    //   const tMin = Number(testing?.testingTime?.min) || Number(testing?.testing_min) || 0;
+    //   const totalTestingMin = tHr * 60 + tMin;
+    //   const timeStr = totalTestingMin > 0 ? `${formatOnlyMinutes(totalTestingMin)} >> ${formatDecimalHours(totalTestingMin)}` : "";
 
-      blocks.push({ type: "testing_header", text: `${testing.testingModule || "N/A"} -> testing on dev/beta >>> ${timeStr}\n\n\n**Testing Module => ${testing.testingModule || "N/A"}\n\nand\n\n**Test case scenario => ${testing.testCaseScenario || "N/A"}\n\nand\n\n**bug founded module : - ${testing.bugFoundedModule || "N/A"}` });
+    //   blocks.push({ type: "testing_header", text: `${testing.testingModule || "N/A"} -> testing on dev/beta >>> ${timeStr}\n\n\n**Testing Module => ${testing.testingModule || "N/A"}\n\nand\n\n**Test case scenario => ${testing.testCaseScenario || "N/A"}\n\nand\n\n**bug founded module : - ${testing.bugFoundedModule || "N/A"}` });
 
-      if (testing.bugs && testing.bugs.length > 0) {
-        testing.bugs.forEach((bug) => {
-          if (bug.description) {
-            blocks.push({ type: "testing_bug", text: `and\n\n${bug.description}` });
-          }
-        });
-      }
+    //   if (testing.bugs && testing.bugs.length > 0) {
+    //     testing.bugs.forEach((bug) => {
+    //       if (bug.description) {
+    //         blocks.push({ type: "testing_bug", text: `and\n\n${bug.description}` });
+    //       }
+    //     });
+    //   }
 
-      blocks.push({ type: "testing_stats", text: `and\n\nTotal Bug Count => ${testing.bugs?.length || 0}\n\n[Created Bungs Url]` });
+    //   blocks.push({ type: "testing_stats", text: `and\n\nTotal Bug Count => ${testing.bugs?.length || 0}\n\n[Created Bungs Url]` });
 
-      if (testing.bugs && testing.bugs.length > 0) {
-        let urlsText = testing.bugs.map((bug, index) => {
-          if (bug.url) {
-            return `   ${index + 1} . ${bug.url}`;
-          }
-          return null;
-        }).filter(Boolean).join("\n");
-        if (urlsText) {
-          blocks.push({ type: "testing_urls", text: urlsText });
-        }
-      }
+    //   if (testing.bugs && testing.bugs.length > 0) {
+    //     let urlsText = testing.bugs.map((bug, index) => {
+    //       if (bug.url) {
+    //         return `   ${index + 1} . ${bug.url}`;
+    //       }
+    //       return null;
+    //     }).filter(Boolean).join("\n");
+    //     if (urlsText) {
+    //       blocks.push({ type: "testing_urls", text: urlsText });
+    //     }
+    //   }
 
-      blocks.push({ type: "divider", text: `------------------------------------------------------------------------` });
-    };
+    //   blocks.push({ type: "divider", text: `------------------------------------------------------------------------` });
+    // };
 
     generateTasksOutput();
     generateDiscussionOutput();
     generateMrIssueOutput();
     generateTestingSummaryOutput();
     generatePanelUpdateOutput();
-    generateTestingOutput();
+    // generateTestingOutput();
 
     const fullText = blocks.map(b => b.text).join('\n\n');
 

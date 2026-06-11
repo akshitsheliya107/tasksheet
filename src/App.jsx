@@ -9,6 +9,7 @@ import Sidebar from "./components/Sidebar";
 import History from "./components/History";
 import KekaTimer from "./components/KekaTimer";
 import ClickupSettings from "./components/ClickupSettings";
+import ClickupDiscovery from "./components/ClickupDiscovery";
 import Login from "./components/auth/Login";
 import Signup from "./components/auth/Signup";
 import { useAuth } from "./context/AuthContext";
@@ -246,6 +247,8 @@ useEffect(() => {
         return <KekaTimer />;
       case "clickup_settings":
         return <ClickupSettings typeOptions={typeOptions} />;
+      case "clickup_discovery":
+        return <ClickupDiscovery />;
       case "dashboard":
       default:
         return (
