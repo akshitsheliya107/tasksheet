@@ -19,7 +19,7 @@ export default function Sidebar({
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
     { id: "keka_timer", label: "Keka Timer", icon: Clock },
     { id: "clickup_settings", label: "ClickUp Settings", icon: Settings },
-    { id: "clickup_discovery", label: "ClickUp Discovery", icon: Search },
+    // { id: "clickup_discovery", label: "ClickUp Discovery", icon: Search },
     { id: "history", label: "History", icon: History },
   ];
 
