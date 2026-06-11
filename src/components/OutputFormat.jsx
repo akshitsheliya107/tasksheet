@@ -411,13 +411,13 @@ export default function OutputFormat({ tasks = [], testing = {}, discussion = {}
   };
 
   return (
-    <div className="bg-gray-800 rounded-lg overflow-hidden">
-      <div className="px-5 py-4 border-b border-gray-700 flex items-center justify-between">
+    <div className="bg-[#FFFFFF] dark:bg-[#242424] rounded-lg overflow-hidden border border-gray-200 dark:border-[#333333] shadow-sm">
+      <div className="px-5 py-4 border-b border-gray-200 dark:border-[#333333] flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <FileText size={20} className="text-emerald-400" />
+          <FileText size={20} className="text-emerald-500 dark:text-emerald-400" />
           <div>
-            <h3 className="font-semibold text-white">Generated Output</h3>
-            <p className="text-xs text-gray-400">
+            <h3 className="font-semibold text-gray-800 dark:text-white">Generated Output</h3>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
               Copy or download your report
             </p>
           </div>
@@ -427,7 +427,7 @@ export default function OutputFormat({ tasks = [], testing = {}, discussion = {}
           <button
             onClick={handleRefresh}
             disabled={isRefreshing}
-            className="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-700 text-white text-sm rounded hover:bg-gray-600 transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-[#333333] text-gray-700 dark:text-gray-200 text-sm rounded hover:bg-gray-200 dark:hover:bg-[#404040] transition-colors disabled:opacity-50"
           >
             <RefreshCw size={14} className={isRefreshing ? "animate-spin" : ""} />
             Refresh
@@ -435,7 +435,7 @@ export default function OutputFormat({ tasks = [], testing = {}, discussion = {}
 
           <button
             onClick={handleDownload}
-            className="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-700 text-white text-sm rounded hover:bg-gray-600 transition-colors"
+            className="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-[#333333] text-gray-700 dark:text-gray-200 text-sm rounded hover:bg-gray-200 dark:hover:bg-[#404040] transition-colors"
           >
             <Download size={14} />
             Download
@@ -454,19 +454,19 @@ export default function OutputFormat({ tasks = [], testing = {}, discussion = {}
         </div>
       </div>
 
-      <div className="p-4 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 transition-colors duration-300">
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm text-sm whitespace-pre-wrap max-h-[600px] overflow-y-auto font-mono text-gray-800 dark:text-gray-100 transition-colors duration-300">
+      <div className="p-4 bg-[#FDFDFD] dark:bg-[#1A1A1A] transition-colors duration-300">
+        <div className="bg-[#FFFFFF] dark:bg-[#242424] border border-gray-200 dark:border-[#333333] rounded-lg shadow-sm text-sm whitespace-pre-wrap max-h-[600px] overflow-y-auto font-mono text-gray-800 dark:text-gray-100 transition-colors duration-300">
           {outputBlocks.map((block, i) => (
             <div
               key={i}
-              className={`relative group px-4 py-2 hover:bg-emerald-50 dark:hover:bg-gray-700/50 transition-colors border-b border-gray-100 dark:border-gray-700/50 last:border-0 ${block.type === 'divider' ? 'bg-gray-100 dark:bg-gray-800/80 text-gray-400 dark:text-gray-500' : ''} ${block.type === 'category' ? 'bg-gray-100 dark:bg-gray-700 font-bold text-gray-700 dark:text-gray-200' : ''}`}
+              className={`relative group px-4 py-2 hover:bg-emerald-50 dark:hover:bg-[#2A2A2A] transition-colors border-b border-gray-100 dark:border-[#333333] last:border-0 ${block.type === 'divider' ? 'bg-[#FDFDFD] dark:bg-[#242424] text-gray-400 dark:text-gray-500' : ''} ${block.type === 'category' ? 'bg-gray-100 dark:bg-[#2A2A2A] font-bold text-gray-700 dark:text-gray-200' : ''}`}
             >
               {/* Copy button that shows on hover */}
               {block.type !== 'divider' && block.type !== 'header' && (
                 <button
                   onClick={() => handleCopyText(block.text)}
                   title="Copy this section"
-                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 bg-white dark:bg-gray-600 border border-emerald-200 dark:border-gray-500 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-600 hover:text-white dark:hover:bg-emerald-500 dark:hover:text-white p-1.5 rounded-md shadow-sm transition-all duration-200"
+                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 bg-[#FFFFFF] dark:bg-[#333333] border border-emerald-200 dark:border-[#404040] text-emerald-600 dark:text-emerald-400 hover:bg-emerald-600 hover:text-white dark:hover:bg-[#1A5336] dark:hover:text-white p-1.5 rounded-md shadow-sm transition-all duration-200"
                 >
                   <Copy size={14} />
                 </button>

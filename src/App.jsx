@@ -122,7 +122,7 @@ useEffect(() => {
       borderRadius: 8,
       fontSize: 14,
       controlHeight: 36,
-      colorBgBase: isDarkMode ? "#1f2937" : "#ffffff",
+      colorBgBase: isDarkMode ? "#242424" : "#ffffff",
       colorTextBase: isDarkMode ? "#f3f4f6" : "#1f2937",
     },
     components: {
@@ -288,7 +288,7 @@ useEffect(() => {
 
   return (
     <ConfigProvider theme={antdTheme}>
-      <div className="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
+      <div className="min-h-screen bg-[#FDFDFD] dark:bg-[#1A1A1A] transition-colors duration-300">
         <Toaster
           position="top-right"
           toastOptions={{
@@ -326,9 +326,9 @@ useEffect(() => {
 
         <main className={`transition-all duration-300 flex flex-col ${isSidebarOpen ? "ml-60" : "ml-16"}`}>
           {/* Global Top Header */}
-          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 px-6 py-3 flex items-center justify-between sticky top-0 z-40 shadow-sm transition-colors duration-300">
+          <div className="bg-[#FFFFFF]/80 dark:bg-[#1A1A1A]/80 backdrop-blur-md border-b border-gray-200 dark:border-[#333333] px-6 py-3 flex items-center justify-between sticky top-0 z-40 shadow-sm transition-colors duration-300">
             <div className="flex items-center gap-4">
-              <div className="flex items-center bg-gray-100 dark:bg-gray-900 rounded-lg p-1 border border-gray-200 dark:border-gray-700 transition-colors duration-300">
+              <div className="flex items-center bg-[#FDFDFD] dark:bg-[#242424] rounded-lg p-1 border border-gray-200 dark:border-[#333333] transition-colors duration-300">
                 <button 
                   onClick={setToday}
                   className="px-3 py-1.5 text-sm font-medium rounded transition-all bg-emerald-600 text-white shadow"
@@ -358,7 +358,7 @@ useEffect(() => {
     )}
   </button>
   
-  <div className="w-px h-6 bg-gray-300 dark:bg-gray-700 mx-1"></div>
+  <div className="w-px h-6 bg-gray-300 dark:bg-[#333333] mx-1"></div>
   
   <Popconfirm
     title="Log Out"
