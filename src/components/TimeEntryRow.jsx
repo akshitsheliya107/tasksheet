@@ -176,12 +176,12 @@ export default function TimeEntryRow({
     debouncedUpdate(updated);
   };
 
-  const rowBg = index % 2 === 0 ? "bg-[#FFFFFF] dark:bg-[#242424]" : "bg-[#FDFDFD] dark:bg-[#1f1f1f]";
+  const rowBg = index % 2 === 0 ? "bg-white dark:bg-gray-800" : "bg-gray-50 dark:bg-gray-900/50";
   const { totalMinutes, finalTime } = calculateTotals(localHrs, localMin);
 
   return (
     <tr className={`${rowBg} hover:bg-emerald-50/50 dark:hover:bg-emerald-900/20 transition-all duration-200 animate-fadeIn`}>
-      <td className="px-3 py-3 border-r border-gray-200 dark:border-[#333333]">
+      <td className="px-3 py-3 border-r border-gray-200 dark:border-gray-700">
         <div className="flex flex-col gap-1.5">
           <input
             type="text"
@@ -190,7 +190,7 @@ export default function TimeEntryRow({
               setLocalEntry({ ...localEntry, date: e.target.value });
               triggerUpdate("date", e.target.value);
             }}
-            className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-[#404040] rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-[#FFFFFF] dark:bg-[#2A2A2A] text-gray-900 dark:text-gray-100 transition-all duration-200"
+            className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all duration-200"
             placeholder="DD/MM/YYYY"
             disabled={readOnly}
           />
@@ -209,7 +209,7 @@ export default function TimeEntryRow({
             ) : entry.task && entry.task.trim() !== "" ? (
               <span 
                 title="Manually added"
-                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-gray-100 text-gray-600 dark:bg-[#2A2A2A] dark:text-neutral-400"
+                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-gray-100 text-gray-600 dark:bg-neutral-800 dark:text-neutral-400"
               >
                 M
               </span>
@@ -218,7 +218,7 @@ export default function TimeEntryRow({
         </div>
       </td>
 
-      <td className="px-3 py-3 border-r border-gray-200 dark:border-[#333333]">
+      <td className="px-3 py-3 border-r border-gray-200 dark:border-gray-700">
         {readOnly ? (
           localEntry.cuLink ? (
             <a href={localEntry.cuLink} target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 underline text-xs break-all">
@@ -235,28 +235,28 @@ export default function TimeEntryRow({
               setLocalEntry({ ...localEntry, cuLink: e.target.value });
               triggerUpdate("cuLink", e.target.value);
             }}
-            className="w-full px-2 py-2 text-xs border border-gray-300 dark:border-[#404040] rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-[#FFFFFF] dark:bg-[#2A2A2A] text-gray-900 dark:text-gray-100 transition-all duration-200"
+            className="w-full px-2 py-2 text-xs border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all duration-200"
             placeholder="Paste CU Link..."
             disabled={readOnly}
           />
         )}
       </td>
 
-      <td className="px-3 py-3 border-r border-gray-200 dark:border-[#333333]">
+      <td className="px-3 py-3 border-r border-gray-200 dark:border-gray-700">
         <textarea
           value={localEntry.task || ""}
           onChange={(e) => {
             setLocalEntry({ ...localEntry, task: e.target.value });
             triggerUpdate("task", e.target.value);
           }}
-          className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-[#404040] rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-[#FFFFFF] dark:bg-[#2A2A2A] text-gray-900 dark:text-gray-100 resize-none transition-all duration-200"
+          className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 resize-none transition-all duration-200"
           placeholder="Enter task description..."
           rows={2}
           disabled={readOnly}
         />
       </td>
 
-      <td className="px-3 py-3 border-r border-gray-200 dark:border-[#333333]">
+      <td className="px-3 py-3 border-r border-gray-200 dark:border-gray-700">
         <input
           type="text"
           inputMode="numeric"
@@ -264,12 +264,12 @@ export default function TimeEntryRow({
           onChange={(e) => handleNumericChange("hrs", e.target.value)}
           onBlur={() => handleBlur("hrs")}
           onKeyDown={(e) => handleKeyDown("hrs", e)}
-          className="w-full px-2 py-2 text-sm text-center border border-gray-300 dark:border-[#404040] rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-[#FFFFFF] dark:bg-[#2A2A2A] text-gray-900 dark:text-gray-100 transition-all duration-200"
+          className="w-full px-2 py-2 text-sm text-center border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all duration-200"
           disabled={readOnly}
         />
       </td>
 
-      <td className="px-3 py-3 border-r border-gray-200 dark:border-[#333333]">
+      <td className="px-3 py-3 border-r border-gray-200 dark:border-gray-700">
         <input
           type="text"
           inputMode="numeric"
@@ -277,20 +277,20 @@ export default function TimeEntryRow({
           onChange={(e) => handleNumericChange("min", e.target.value)}
           onBlur={() => handleBlur("min")}
           onKeyDown={(e) => handleKeyDown("min", e)}
-          className="w-full px-2 py-2 text-sm text-center border border-gray-300 dark:border-[#404040] rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-[#FFFFFF] dark:bg-[#2A2A2A] text-gray-900 dark:text-gray-100 transition-all duration-200"
+          className="w-full px-2 py-2 text-sm text-center border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all duration-200"
           disabled={readOnly}
         />
       </td>
 
-      <td className="px-3 py-3 text-center border-r border-gray-200 dark:border-[#333333]">
+      <td className="px-3 py-3 text-center border-r border-gray-200 dark:border-gray-700">
         <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{totalMinutes}</span>
       </td>
 
-      <td className="px-3 py-3 text-center border-r border-gray-200 dark:border-[#333333]">
+      <td className="px-3 py-3 text-center border-r border-gray-200 dark:border-gray-700">
         <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">{finalTime}</span>
       </td>
 
-      <td className="px-3 py-3 border-r border-gray-200 dark:border-[#333333]">
+      <td className="px-3 py-3 border-r border-gray-200 dark:border-gray-700">
         {readOnly ? (
           <span className="text-sm text-gray-600 dark:text-gray-400">{safeType || "-"}</span>
         ) : (
@@ -360,7 +360,7 @@ export default function TimeEntryRow({
         )}
       </td>
 
-      <td className="px-3 py-3 border-r border-gray-200 dark:border-[#333333]">
+      <td className="px-3 py-3 border-r border-gray-200 dark:border-gray-700">
         {readOnly ? (
           <span className="text-sm text-gray-600 dark:text-gray-400">{safeStatus || "-"}</span>
         ) : (
@@ -430,7 +430,7 @@ export default function TimeEntryRow({
         )}
       </td>
 
-      <td className="px-3 py-3 border-r border-gray-200 dark:border-[#333333]">
+      <td className="px-3 py-3 border-r border-gray-200 dark:border-gray-700">
         {readOnly ? (
           <span className="text-sm text-gray-600 dark:text-gray-400">{safeBugType || "-"}</span>
         ) : (
@@ -500,7 +500,7 @@ export default function TimeEntryRow({
         )}
       </td>
 
-      <td className="px-3 py-3 text-center border-r border-gray-200 dark:border-[#333333]">
+      <td className="px-3 py-3 text-center border-r border-gray-200 dark:border-gray-700">
         <label className="inline-flex items-center justify-center cursor-pointer">
           <input
             type="checkbox"
@@ -525,7 +525,7 @@ export default function TimeEntryRow({
         </label>
       </td>
 
-      <td className="px-3 py-3 text-center border-r border-gray-200 dark:border-[#333333]">
+      <td className="px-3 py-3 text-center border-r border-gray-200 dark:border-gray-700">
         <label className="inline-flex items-center justify-center cursor-pointer">
           <input
             type="checkbox"
