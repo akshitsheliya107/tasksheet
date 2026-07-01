@@ -281,6 +281,7 @@ useEffect(() => {
             onRefresh={fetchTasks}
             onSaveSnapshot={saveSnapshot}
             theme={theme}
+            onViewChange={setActiveView}
           />
         );
     }

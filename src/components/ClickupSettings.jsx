@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { 
   Eye, EyeOff, Save, RefreshCw, Plus, Trash2, GripVertical,
   CheckCircle, XCircle, ExternalLink, HelpCircle, ChevronUp, ChevronDown,
@@ -83,10 +83,22 @@ export default function ClickupSettings({ typeOptions = [] }) {
   const [testResult, setTestResult] = useState(null);
   const [loadingTeams, setLoadingTeams] = useState(false);
   const [availableTeams, setAvailableTeams] = useState([]);
+  const reportNameRef = useRef(null);
 
   useEffect(() => {
     loadConfig();
   }, []);
+
+  useEffect(() => {
+    if (config && !config.reportName && reportNameRef.current) {
+      setTimeout(() => {
+        if (reportNameRef.current && reportNameRef.current.input) {
+          reportNameRef.current.focus();
+          reportNameRef.current.input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 300);
+    }
+  }, [config]);
 
   const loadConfig = async () => {
     setLoading(true);
@@ -486,10 +498,11 @@ export default function ClickupSettings({ typeOptions = [] }) {
               <User size={14} /> Report Name
             </label>
             <Input
+              ref={reportNameRef}
               value={config.reportName || ""}
               onChange={(e) => setConfig({ ...config, reportName: e.target.value })}
               placeholder="e.g. Akshit Sheliya"
-              className="cu-input"
+              className={`cu-input transition-all duration-300 ${!config.reportName ? '!border-blue-500 ring-4 ring-blue-500/30 animate-pulse shadow-md' : ''}`}
             />
             <span className="text-xs text-gray-500 dark:text-gray-400 mt-1 block">
               Name to appear on the generated output report header

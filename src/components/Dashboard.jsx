@@ -16,7 +16,7 @@ import {
   Bug,
   Trash2,
 } from "lucide-react";
-import { Modal, message } from "antd";
+import { Modal, message, Alert, Button } from "antd";
 import TimeEntryRow from "./TimeEntryRow";
 import TestingSection from "./TestingSection";
 import OutputFormat from "./OutputFormat";
@@ -51,6 +51,7 @@ export default function Dashboard({
   onRefresh,
   onSaveSnapshot,
   theme = "emerald",
+  onViewChange,
 }) {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showDiscussion, setShowDiscussion] = useState(true);
@@ -59,14 +60,16 @@ export default function Dashboard({
   const [initialized, setInitialized] = useState(false);
   const [showClickupModal, setShowClickupModal] = useState(false);
   const [lastSyncedAt, setLastSyncedAt] = useState(null);
+  const [config, setConfig] = useState(null);
   const [, forceUpdate] = useState(0);
 
   // Load last sync time
   useEffect(() => {
     const loadSyncTime = async () => {
       try {
-        const config = await clickupConfigAPI.get();
-        setLastSyncedAt(config.lastSyncedAt);
+        const cfg = await clickupConfigAPI.get();
+        setConfig(cfg);
+        setLastSyncedAt(cfg.lastSyncedAt);
       } catch (err) {
         console.error(err);
       }
@@ -238,6 +241,32 @@ useEffect(() => {
 
   return (
     <div className="space-y-6 animate-fadeIn">
+      {config && !config.reportName && (
+        <Alert
+          message={
+            <span className="font-semibold text-blue-800 dark:text-blue-200">
+              New Report Format Update
+            </span>
+          }
+          description={
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-1">
+              <span className="text-blue-700 dark:text-blue-300">
+                Please enter your Name in Settings to apply it to your generated output headers.
+              </span>
+              <button 
+                onClick={() => onViewChange && onViewChange("clickup_settings")}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded-lg text-sm font-medium transition-colors shadow-sm whitespace-nowrap self-start sm:self-auto"
+              >
+                Go to Settings
+              </button>
+            </div>
+          }
+          type="info"
+          showIcon
+          className="rounded-xl shadow-sm border-blue-200 dark:border-blue-800/50 dark:bg-blue-900/20"
+        />
+      )}
+
       <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-md rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 transition-all duration-300 hover:shadow-md">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div>
