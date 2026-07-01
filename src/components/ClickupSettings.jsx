@@ -107,6 +107,7 @@ export default function ClickupSettings({ typeOptions = [] }) {
         apiToken: config.apiToken,
         teamId: config.teamId,
         userId: config.userId,
+        reportName: config.reportName,
       });
       setConfig(updated);
       toast.success("Credentials saved");
@@ -477,6 +478,21 @@ export default function ClickupSettings({ typeOptions = [] }) {
             />
             <span className="text-xs text-gray-500 dark:text-gray-400 mt-1 block">
               Auto-detected from your API token (or enter manually)
+            </span>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-1">
+              <User size={14} /> Report Name
+            </label>
+            <Input
+              value={config.reportName || ""}
+              onChange={(e) => setConfig({ ...config, reportName: e.target.value })}
+              placeholder="e.g. Akshit Sheliya"
+              className="cu-input"
+            />
+            <span className="text-xs text-gray-500 dark:text-gray-400 mt-1 block">
+              Name to appear on the generated output report header
             </span>
           </div>
         </div>

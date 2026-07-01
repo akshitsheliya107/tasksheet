@@ -258,6 +258,7 @@ export const initialClickupConfig = {
   apiToken: "",
   teamId: "",
   userId: "",
+  reportName: "",
   listMapping: DEFAULT_CLICKUP_LIST_MAPPING,
   defaultType: "Internal Bug",          // fallback if no rule matches
   defaultStatusSource: "main_status",

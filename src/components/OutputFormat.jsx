@@ -1,10 +1,20 @@
 import { Copy, Check, Download, FileText, RefreshCw } from "lucide-react";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { message } from "antd";
+import { clickupConfigAPI } from "../services/api";
 
 export default function OutputFormat({ tasks = [], testing = {}, discussion = {}, mrIssue = {}, onRefresh }) {
   const [copied, setCopied] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [reportName, setReportName] = useState("");
+
+  useEffect(() => {
+    clickupConfigAPI.get().then(config => {
+      if (config && config.reportName) {
+        setReportName(config.reportName);
+      }
+    }).catch(err => console.error(err));
+  }, []);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -132,7 +142,7 @@ export default function OutputFormat({ tasks = [], testing = {}, discussion = {}
   const { fullOutput, outputBlocks } = useMemo(() => {
     const blocks = [];
 
-    blocks.push({ type: "header", text: `DATE: ${getCurrentDate()}` });
+    blocks.push({ type: "header", text: `**DATE: ${getCurrentDate()} ${reportName ? `| ${reportName} ` : ''}| Update**` });
 
     const generateTasksOutput = () => {
       const groups = {};
@@ -187,7 +197,7 @@ export default function OutputFormat({ tasks = [], testing = {}, discussion = {}
 
         blocks.push({
           type: "category",
-          text: `${headerPrefix}[${catName}] [${arr.length}]${suffix}`
+          text: `**${headerPrefix}[${catName}] [${arr.length}]${suffix}**`
         });
 
         arr.forEach((t) => {
@@ -201,9 +211,9 @@ export default function OutputFormat({ tasks = [], testing = {}, discussion = {}
 
           let taskText = "";
           if (catName === "NF") {
-            taskText = `[${bugType}] => [${cuLink || "-"}] => ${desc} => [${status}] => Time Spent: ${minDisplay} = ${hrDecimal}\n`;
+            taskText = `**[${bugType}]** => [${cuLink || "-"}] => ${desc} => **[${status}]** => Time Spent: ${minDisplay} = ${hrDecimal}`;
           } else {
-            taskText = `[${bugType}] => ${cuLink || "-"} => ${desc} => [${status}] => Time Spent: ${minDisplay} = ${hrDecimal}\n`;
+            taskText = `**[${bugType}]** => ${cuLink || "-"} => ${desc} => **[${status}]** => Time Spent: ${minDisplay} = ${hrDecimal}`;
           }
 
           blocks.push({
@@ -382,21 +392,58 @@ export default function OutputFormat({ tasks = [], testing = {}, discussion = {}
     generatePanelUpdateOutput();
     // generateTestingOutput();
 
-    const fullText = blocks.map(b => b.text).join('\n\n');
+    let fullText = "";
+    blocks.forEach((b, i) => {
+      fullText += b.text;
+      if (i < blocks.length - 1) {
+         const next = blocks[i+1];
+         if (
+           (b.type === "category" && next.type === "task") ||
+           (b.type === "task" && next.type === "task")
+         ) {
+           fullText += "\n";
+         } else {
+           fullText += "\n\n";
+         }
+      }
+    });
 
     return { fullOutput: fullText, outputBlocks: blocks };
-  }, [tasks, testing, discussion]);
+  }, [tasks, testing, discussion, mrIssue, reportName]);
 
-  const handleCopyText = (text) => {
-    navigator.clipboard.writeText(text);
-    message.success("Copied to clipboard");
+  const handleCopyText = async (text) => {
+    try {
+      const htmlText = `<div>${text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br/>')}</div>`;
+      const clipboardItem = new ClipboardItem({
+        'text/plain': new Blob([text], { type: 'text/plain' }),
+        'text/html': new Blob([htmlText], { type: 'text/html' })
+      });
+      await navigator.clipboard.write([clipboardItem]);
+      message.success("Copied to clipboard");
+    } catch (err) {
+      navigator.clipboard.writeText(text);
+      message.success("Copied to clipboard");
+    }
   };
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(fullOutput);
-    setCopied(true);
-    message.success("Full output copied to clipboard");
-    setTimeout(() => setCopied(false), 2000);
+  const handleCopy = async () => {
+    try {
+      const htmlOutput = `<div>${fullOutput.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br/>')}</div>`;
+      const clipboardItem = new ClipboardItem({
+        'text/plain': new Blob([fullOutput], { type: 'text/plain' }),
+        'text/html': new Blob([htmlOutput], { type: 'text/html' })
+      });
+      await navigator.clipboard.write([clipboardItem]);
+      setCopied(true);
+      message.success("Rich text copied to clipboard!");
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Clipboard API failed", err);
+      navigator.clipboard.writeText(fullOutput);
+      setCopied(true);
+      message.success("Plain text copied to clipboard");
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   const handleDownload = () => {
