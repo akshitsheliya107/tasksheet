@@ -41,6 +41,36 @@ useEffect(() => {
     return new Date().toISOString().split("T")[0];
   });
   const [isSwapping, setIsSwapping] = useState(false);
+  const [updateAvailable, setUpdateAvailable] = useState(false);
+
+  useEffect(() => {
+    // Skip in dev mode or if __APP_VERSION__ is not defined
+    if (typeof __APP_VERSION__ === 'undefined') return;
+
+    const checkUpdate = async () => {
+      try {
+        const res = await fetch(`/version.json?t=${Date.now()}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.version && data.version > __APP_VERSION__) {
+            setUpdateAvailable(true);
+          }
+        }
+      } catch (e) {
+        // Silently ignore errors
+      }
+    };
+
+    // Check every 5 minutes
+    const interval = setInterval(checkUpdate, 5 * 60 * 1000);
+    // Initial check after 10 seconds
+    const timeout = setTimeout(checkUpdate, 10000);
+    
+    return () => {
+      clearInterval(interval);
+      clearTimeout(timeout);
+    };
+  }, []);
 
   const [isDarkMode, setIsDarkMode] = useState(() => {
     return localStorage.getItem("dark-mode") === "true";
@@ -289,6 +319,20 @@ useEffect(() => {
 
   return (
     <ConfigProvider theme={antdTheme}>
+      {updateAvailable && (
+        <div className="fixed top-0 left-0 right-0 z-[100] bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 flex items-center justify-between shadow-lg">
+          <div className="flex items-center gap-3">
+            <RefreshCw size={20} className="animate-spin-slow" />
+            <span className="font-semibold">A new version of the application is available!</span>
+          </div>
+          <button 
+            onClick={() => window.location.reload(true)} 
+            className="bg-white text-blue-600 px-5 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-blue-50 transition-colors"
+          >
+            Refresh to Update
+          </button>
+        </div>
+      )}
       <div className="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
         <Toaster
           position="top-right"
