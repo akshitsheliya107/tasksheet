@@ -551,7 +551,7 @@ useEffect(() => {
                       }
                     `}
                   </style>
-                  <div className="dashboard-collapse my-2 mx-4 rounded-xl overflow-hidden border border-[#333333] bg-[#242424]">
+                  <div className="dashboard-collapse my-2 mx-4 rounded-xl overflow-hidden border border-gray-200 dark:border-[#333333] bg-white dark:bg-[#242424] shadow-sm">
                     <Collapse
                       activeKey={showDiscussion ? ["discussion"] : []}
                       onChange={() => setShowDiscussion(!showDiscussion)}
@@ -578,43 +578,43 @@ useEffect(() => {
                           children: (
                             <table className="w-full border-collapse">
                               <tbody>
-                                <tr className="bg-[#1A1A1A]">
-                                  <td className="px-4 py-3 text-center text-gray-400 text-sm border-r border-[#333333]" style={{ width: "100px", minWidth: "100px" }}>
+                                <tr className="bg-[#F8FAFC] dark:bg-[#1A1A1A]">
+                                  <td className="px-4 py-3 text-center text-gray-500 dark:text-gray-400 text-sm border-r border-gray-200 dark:border-[#333333]" style={{ width: "100px", minWidth: "100px" }}>
                                     -
                                   </td>
-                                  <td className="px-4 py-3 border-r border-[#333333]" style={{ width: "460px", minWidth: "460px" }}>
+                                  <td className="px-4 py-3 border-r border-gray-200 dark:border-[#333333]" style={{ width: "460px", minWidth: "460px" }}>
                                     <input
                                       type="text"
                                       value={discussion.note || ""}
                                       onChange={(e) => onUpdateDiscussion("note", e.target.value)}
-                                      className="w-full px-3 py-2 text-sm bg-[#2A2A2A] border border-[#404040] text-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
+                                      className="w-full px-3 py-2 text-sm bg-white dark:bg-[#2A2A2A] border border-gray-300 dark:border-[#404040] text-gray-900 dark:text-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
                                       placeholder="https://..."
                                     />
                                   </td>
-                                  <td className="px-4 py-3 border-r border-[#333333]" style={{ width: "100px", minWidth: "100px" }}>
+                                  <td className="px-4 py-3 border-r border-gray-200 dark:border-[#333333]" style={{ width: "100px", minWidth: "100px" }}>
                                     <input
                                       min="0"
                                       value={discussion.hrs || 0}
                                       onChange={(e) => onUpdateDiscussion("hrs", Number(e.target.value))}
-                                      className="w-full px-2 py-2 text-sm text-center bg-[#2A2A2A] border border-[#404040] text-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
+                                      className="w-full px-2 py-2 text-sm text-center bg-white dark:bg-[#2A2A2A] border border-gray-300 dark:border-[#404040] text-gray-900 dark:text-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
                                     />
                                   </td>
-                                  <td className="px-4 py-3 border-r border-[#333333]" style={{ width: "100px", minWidth: "100px" }}>
+                                  <td className="px-4 py-3 border-r border-gray-200 dark:border-[#333333]" style={{ width: "100px", minWidth: "100px" }}>
                                     <input
                                       min="0"
                                       max="59"
                                       value={discussion.min || 0}
                                       onChange={(e) => onUpdateDiscussion("min", Number(e.target.value))}
-                                      className="w-full px-2 py-2 text-sm text-center bg-[#2A2A2A] border border-[#404040] text-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
+                                      className="w-full px-2 py-2 text-sm text-center bg-white dark:bg-[#2A2A2A] border border-gray-300 dark:border-[#404040] text-gray-900 dark:text-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
                                     />
                                   </td>
-                                  <td className="px-4 py-3 text-center text-sm font-semibold text-[#60A5FA] border-r border-[#333333]" style={{ width: "80px", minWidth: "80px" }}>
+                                  <td className="px-4 py-3 text-center text-sm font-semibold text-[#60A5FA] border-r border-gray-200 dark:border-[#333333]" style={{ width: "80px", minWidth: "80px" }}>
                                     {discussionStats.totalMin}
                                   </td>
-                                  <td className="px-4 py-3 text-center text-sm font-bold text-[#60A5FA] border-r border-[#333333]" style={{ width: "80px", minWidth: "80px" }}>
+                                  <td className="px-4 py-3 text-center text-sm font-bold text-[#60A5FA] border-r border-gray-200 dark:border-[#333333]" style={{ width: "80px", minWidth: "80px" }}>
                                     {discussionStats.finalTime}
                                   </td>
-                                  <td className="bg-[#1A1A1A]"></td>
+                                  <td className="bg-[#F8FAFC] dark:bg-[#1A1A1A]"></td>
                                 </tr>
                               </tbody>
                             </table>
@@ -627,8 +627,8 @@ useEffect(() => {
               </tr>
 
               <tr>
-                <td colSpan={13} className="p-0 border-b border-[#333333]">
-                  <div className="dashboard-collapse my-2 mx-4 rounded-xl overflow-hidden border border-[#333333] bg-[#242424]">
+                <td colSpan={13} className="p-0 border-b border-gray-200 dark:border-[#333333]">
+                  <div className="dashboard-collapse my-2 mx-4 rounded-xl overflow-hidden border border-gray-200 dark:border-[#333333] bg-white dark:bg-[#242424] shadow-sm">
                     <Collapse
                       activeKey={showMrIssue ? ["mr-issue"] : []}
                       onChange={() => setShowMrIssue(!showMrIssue)}
@@ -655,43 +655,43 @@ useEffect(() => {
                           children: (
                             <table className="w-full border-collapse">
                               <tbody>
-                                <tr className="bg-[#1A1A1A]">
-                                  <td className="px-4 py-3 text-center text-gray-400 text-sm border-r border-[#333333]" style={{ width: "100px", minWidth: "100px" }}>
+                                <tr className="bg-[#F8FAFC] dark:bg-[#1A1A1A]">
+                                  <td className="px-4 py-3 text-center text-gray-500 dark:text-gray-400 text-sm border-r border-gray-200 dark:border-[#333333]" style={{ width: "100px", minWidth: "100px" }}>
                                     -
                                   </td>
-                                  <td className="px-4 py-3 border-r border-[#333333]" style={{ width: "460px", minWidth: "460px" }}>
+                                  <td className="px-4 py-3 border-r border-gray-200 dark:border-[#333333]" style={{ width: "460px", minWidth: "460px" }}>
                                     <input
                                       type="text"
                                       value={mrIssue?.note || ""}
                                       onChange={(e) => onUpdateMrIssue("note", e.target.value)}
-                                      className="w-full px-3 py-2 text-sm bg-[#2A2A2A] border border-[#404040] text-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
+                                      className="w-full px-3 py-2 text-sm bg-white dark:bg-[#2A2A2A] border border-gray-300 dark:border-[#404040] text-gray-900 dark:text-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
                                       placeholder="MR Issues"
                                     />
                                   </td>
-                                  <td className="px-4 py-3 border-r border-[#333333]" style={{ width: "100px", minWidth: "100px" }}>
+                                  <td className="px-4 py-3 border-r border-gray-200 dark:border-[#333333]" style={{ width: "100px", minWidth: "100px" }}>
                                     <input
                                       min="0"
                                       value={mrIssue?.hrs || 0}
                                       onChange={(e) => onUpdateMrIssue("hrs", Number(e.target.value))}
-                                      className="w-full px-2 py-2 text-sm text-center bg-[#2A2A2A] border border-[#404040] text-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
+                                      className="w-full px-2 py-2 text-sm text-center bg-white dark:bg-[#2A2A2A] border border-gray-300 dark:border-[#404040] text-gray-900 dark:text-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
                                     />
                                   </td>
-                                  <td className="px-4 py-3 border-r border-[#333333]" style={{ width: "100px", minWidth: "100px" }}>
+                                  <td className="px-4 py-3 border-r border-gray-200 dark:border-[#333333]" style={{ width: "100px", minWidth: "100px" }}>
                                     <input
                                       min="0"
                                       max="59"
                                       value={mrIssue?.min || 0}
                                       onChange={(e) => onUpdateMrIssue("min", Number(e.target.value))}
-                                      className="w-full px-2 py-2 text-sm text-center bg-[#2A2A2A] border border-[#404040] text-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
+                                      className="w-full px-2 py-2 text-sm text-center bg-white dark:bg-[#2A2A2A] border border-gray-300 dark:border-[#404040] text-gray-900 dark:text-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
                                     />
                                   </td>
-                                  <td className="px-4 py-3 text-center text-sm font-semibold text-[#60A5FA] border-r border-[#333333]" style={{ width: "80px", minWidth: "80px" }}>
+                                  <td className="px-4 py-3 text-center text-sm font-semibold text-[#60A5FA] border-r border-gray-200 dark:border-[#333333]" style={{ width: "80px", minWidth: "80px" }}>
                                     {mrIssueStats.totalMin}
                                   </td>
-                                  <td className="px-4 py-3 text-center text-sm font-bold text-[#60A5FA] border-r border-[#333333]" style={{ width: "80px", minWidth: "80px" }}>
+                                  <td className="px-4 py-3 text-center text-sm font-bold text-[#60A5FA] border-r border-gray-200 dark:border-[#333333]" style={{ width: "80px", minWidth: "80px" }}>
                                     {mrIssueStats.finalTime}
                                   </td>
-                                  <td className="bg-[#1A1A1A]"></td>
+                                  <td className="bg-[#F8FAFC] dark:bg-[#1A1A1A]"></td>
                                 </tr>
                               </tbody>
                             </table>
@@ -705,6 +705,7 @@ useEffect(() => {
 
               <TestingSection
                 testing={testing}
+                config={config}
                 onUpdate={onUpdateTesting}
                 onAddBug={onAddBug}
                 onUpdateBug={onUpdateBug}
@@ -748,7 +749,7 @@ useEffect(() => {
         </div>
       </div>
 
-      <OutputFormat tasks={tasks} testing={testing} discussion={discussion} mrIssue={mrIssue} onRefresh={onRefresh} />
+      <OutputFormat tasks={tasks} testing={testing} discussion={discussion} mrIssue={mrIssue} config={config} onRefresh={onRefresh} />
 
       <AddTaskModal
         isOpen={showAddModal}

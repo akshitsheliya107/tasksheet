@@ -149,6 +149,7 @@ export default function ClickupSettings({ typeOptions = [] }) {
         discussionLink: config.discussionLink,
         mrIssueLink: config.mrIssueLink,
         testingLink: config.testingLink,
+        enableTestingDetails: config.enableTestingDetails,
       });
       setConfig(updated);
       toast.success("Section links saved");
@@ -718,6 +719,22 @@ export default function ClickupSettings({ typeOptions = [] }) {
           </div>
         </div>
         
+        <div className="mt-6 flex items-center justify-between border-t border-gray-100 dark:border-gray-700 pt-4 pb-2">
+          <div>
+            <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+              Testing in Details
+            </h4>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-[80%]">
+              Turning the toggle On will show additional fields in the Testing section like Testing Module, Test Case Scenarios, and Bugs Founded.
+            </p>
+          </div>
+          <Switch
+            checked={config.enableTestingDetails || false}
+            onChange={(checked) => setConfig({ ...config, enableTestingDetails: checked })}
+            className="bg-gray-300 dark:bg-gray-600 [&.ant-switch-checked]:bg-emerald-500"
+          />
+        </div>
+
         <div className="pt-4 border-t border-gray-100 dark:border-gray-700 flex gap-3">
           <Button onClick={handleSaveSectionLinks} icon={<Save size={16} />}>
             Save Section Links

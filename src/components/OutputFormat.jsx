@@ -3,7 +3,7 @@ import { useState, useMemo, useEffect } from "react";
 import { message } from "antd";
 import { clickupConfigAPI } from "../services/api";
 
-export default function OutputFormat({ tasks = [], testing = {}, discussion = {}, mrIssue = {}, onRefresh }) {
+export default function OutputFormat({ tasks = [], testing = {}, discussion = {}, mrIssue = {}, config = {}, onRefresh }) {
   const [copied, setCopied] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [reportName, setReportName] = useState("");
@@ -274,11 +274,13 @@ export default function OutputFormat({ tasks = [], testing = {}, discussion = {}
       const tHr = Number(testing?.testingTime?.hrs) || Number(testing?.testing_hrs) || 0;
       const tMin = Number(testing?.testingTime?.min) || Number(testing?.testing_min) || 0;
       const totalMin = tHr * 60 + tMin;
+      if (tHr === 0 && tMin === 0 && !testing?.note) return;
       
       const minDisplay = formatOnlyMinutes(totalMin);
       const hrDecimal = formatDecimalHours(totalMin);
+      const note = testing?.note || "testing on dev/beta";
 
-      blocks.push({ type: "testingSummary", text: `=> testing on dev/beta >>> ${minDisplay} >> ${hrDecimal}` });
+      blocks.push({ type: "testingSummary", text: `=> ${note} >>> ${minDisplay} >> ${hrDecimal}` });
     };
 
     const generatePanelUpdateOutput = () => {
@@ -350,61 +352,56 @@ export default function OutputFormat({ tasks = [], testing = {}, discussion = {}
       blocks.push({ type: "panel_stats", text: statsText });
     };
 
-    // const generateTestingOutput = () => {
-    //   blocks.push({ type: "divider", text: `------------------------------------------------------------------------` });
+    const generateTestingOutput = () => {
+      if (!config?.enableTestingDetails) return;
+
+      blocks.push({ type: "divider", text: `------------------------------------------------------------------------` });
       
-    //   const tHr = Number(testing?.testingTime?.hrs) || Number(testing?.testing_hrs) || 0;
-    //   const tMin = Number(testing?.testingTime?.min) || Number(testing?.testing_min) || 0;
-    //   const totalTestingMin = tHr * 60 + tMin;
-    //   const timeStr = totalTestingMin > 0 ? `${formatOnlyMinutes(totalTestingMin)} >> ${formatDecimalHours(totalTestingMin)}` : "";
+      const tHr = Number(testing?.testingTime?.hrs) || Number(testing?.testing_hrs) || 0;
+      const tMin = Number(testing?.testingTime?.min) || Number(testing?.testing_min) || 0;
+      const totalTestingMin = tHr * 60 + tMin;
+      const timeStr = totalTestingMin > 0 ? `${formatOnlyMinutes(totalTestingMin)} >> ${formatDecimalHours(totalTestingMin)}` : "";
+      const note = testing?.note || "testing on dev/beta";
 
-    //   blocks.push({ type: "testing_header", text: `${testing.testingModule || "N/A"} -> testing on dev/beta >>> ${timeStr}\n\n\n**Testing Module => ${testing.testingModule || "N/A"}\n\nand\n\n**Test case scenario => ${testing.testCaseScenario || "N/A"}\n\nand\n\n**bug founded module : - ${testing.bugFoundedModule || "N/A"}` });
+      blocks.push({ type: "testing_header", text: `${testing.testingModule || "N/A"} -> ${note} >>> ${timeStr}\n\n\n**Testing Module => ${testing.testingModule || "N/A"}\n\nand\n\n**Test case scenario => ${testing.testCaseScenario || "N/A"}\n\nand\n\n**bug founded module : - ${testing.bugFoundedModule || "N/A"}` });
 
-    //   if (testing.bugs && testing.bugs.length > 0) {
-    //     testing.bugs.forEach((bug) => {
-    //       if (bug.description) {
-    //         blocks.push({ type: "testing_bug", text: `and\n\n${bug.description}` });
-    //       }
-    //     });
-    //   }
+      if (testing.bugs && testing.bugs.length > 0) {
+        testing.bugs.forEach((bug) => {
+          if (bug.description) {
+            blocks.push({ type: "testing_bug", text: `and\n\n${bug.description}` });
+          }
+        });
+      }
 
-    //   blocks.push({ type: "testing_stats", text: `and\n\nTotal Bug Count => ${testing.bugs?.length || 0}\n\n[Created Bungs Url]` });
+      blocks.push({ type: "testing_stats", text: `and\n\nTotal Bug Count => ${testing.bugs?.length || 0}\n\n[Created Bungs Url]` });
 
-    //   if (testing.bugs && testing.bugs.length > 0) {
-    //     let urlsText = testing.bugs.map((bug, index) => {
-    //       if (bug.url) {
-    //         return `   ${index + 1} . ${bug.url}`;
-    //       }
-    //       return null;
-    //     }).filter(Boolean).join("\n");
-    //     if (urlsText) {
-    //       blocks.push({ type: "testing_urls", text: urlsText });
-    //     }
-    //   }
+      if (testing.bugs && testing.bugs.length > 0) {
+        let urlsText = testing.bugs.map((bug, index) => {
+          if (bug.url) {
+            return `   ${index + 1} . ${bug.url}`;
+          }
+          return null;
+        }).filter(Boolean).join("\n");
+        if (urlsText) {
+          blocks.push({ type: "testing_urls", text: urlsText });
+        }
+      }
 
-    //   blocks.push({ type: "divider", text: `------------------------------------------------------------------------` });
-    // };
+      blocks.push({ type: "divider", text: `------------------------------------------------------------------------` });
+    };
 
     generateTasksOutput();
     generateDiscussionOutput();
     generateMrIssueOutput();
     generateTestingSummaryOutput();
     generatePanelUpdateOutput();
-    // generateTestingOutput();
+    generateTestingOutput();
 
     let fullText = "";
     blocks.forEach((b, i) => {
       fullText += b.text;
       if (i < blocks.length - 1) {
-         const next = blocks[i+1];
-         if (
-           (b.type === "category" && next.type === "task") ||
-           (b.type === "task" && next.type === "task")
-         ) {
-           fullText += "\n";
-         } else {
-           fullText += "\n\n";
-         }
+         fullText += "\n\n";
       }
     });
 
@@ -426,7 +423,7 @@ export default function OutputFormat({ tasks = [], testing = {}, discussion = {}
     }
   };
 
-  const handleCopy = async () => {
+  const handleFormatCopy = async () => {
     try {
       const htmlOutput = `<div>${fullOutput.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br/>')}</div>`;
       const clipboardItem = new ClipboardItem({
@@ -434,28 +431,31 @@ export default function OutputFormat({ tasks = [], testing = {}, discussion = {}
         'text/html': new Blob([htmlOutput], { type: 'text/html' })
       });
       await navigator.clipboard.write([clipboardItem]);
-      setCopied(true);
-      message.success("Rich text copied to clipboard!");
-      setTimeout(() => setCopied(false), 2000);
+      setCopied("format");
+      message.success("Format text copied to clipboard!");
+      setTimeout(() => setCopied(null), 2000);
     } catch (err) {
       console.error("Clipboard API failed", err);
       navigator.clipboard.writeText(fullOutput);
-      setCopied(true);
-      message.success("Plain text copied to clipboard");
-      setTimeout(() => setCopied(false), 2000);
+      setCopied("format");
+      message.success("Copied to clipboard (fallback)");
+      setTimeout(() => setCopied(null), 2000);
     }
   };
 
-  const handleDownload = () => {
-    const blob = new Blob([fullOutput], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `daily-report-${new Date().toISOString().split("T")[0]}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
-    message.success("Report downloaded");
+  const handlePlainCopy = async () => {
+    const plainText = fullOutput.replace(/\*\*/g, '').replace(/\*/g, '');
+    try {
+      await navigator.clipboard.writeText(plainText);
+      setCopied("plain");
+      message.success("Plain text copied to clipboard!");
+      setTimeout(() => setCopied(null), 2000);
+    } catch (err) {
+      console.error("Clipboard API failed", err);
+      message.error("Failed to copy plain text");
+    }
   };
+
 
   return (
     <div className="bg-[#FFFFFF] dark:bg-[#242424] rounded-lg overflow-hidden border border-gray-200 dark:border-[#333333] shadow-sm">
@@ -480,23 +480,27 @@ export default function OutputFormat({ tasks = [], testing = {}, discussion = {}
             Refresh
           </button>
 
+
           <button
-            onClick={handleDownload}
-            className="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-[#333333] text-gray-700 dark:text-gray-200 text-sm rounded hover:bg-gray-200 dark:hover:bg-[#404040] transition-colors"
+            onClick={handlePlainCopy}
+            className={`inline-flex items-center gap-2 px-3 py-1.5 text-sm rounded transition-colors ${copied === "plain"
+              ? "bg-green-500 text-white"
+              : "bg-gray-100 dark:bg-[#333333] text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-[#404040]"
+              }`}
           >
-            <Download size={14} />
-            Download
+            {copied === "plain" ? <Check size={14} /> : <Copy size={14} />}
+            {copied === "plain" ? "Copied!" : "Plain Copy"}
           </button>
 
           <button
-            onClick={handleCopy}
-            className={`inline-flex items-center gap-2 px-3 py-1.5 text-sm rounded transition-colors ${copied
+            onClick={handleFormatCopy}
+            className={`inline-flex items-center gap-2 px-3 py-1.5 text-sm rounded transition-colors ${copied === "format"
               ? "bg-green-500 text-white"
               : "bg-emerald-600 text-white hover:bg-emerald-700"
               }`}
           >
-            {copied ? <Check size={14} /> : <Copy size={14} />}
-            {copied ? "Copied!" : "Copy"}
+            {copied === "format" ? <Check size={14} /> : <Copy size={14} />}
+            {copied === "format" ? "Copied!" : "Format Copy"}
           </button>
         </div>
       </div>
