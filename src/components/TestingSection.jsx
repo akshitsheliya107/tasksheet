@@ -26,9 +26,9 @@ export default function TestingSection({
   const [additionalDetailsOpen, setAdditionalDetailsOpen] = useState([]);
 
   const debouncedUpdate = useCallback(
-    debounce((updates) => {
+    (updates) => {
       if (!readOnly) onUpdate(updates);
-    }, 500),
+    },
     [onUpdate, readOnly]
   );
 
@@ -147,7 +147,7 @@ export default function TestingSection({
                           <input
                             type="text"
                             inputMode="numeric"
-                            defaultValue={testing.testingTime?.hrs || 0}
+                            value={testing.testingTime?.hrs || 0}
                             onKeyDown={(e) => {
                               const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Home', 'End'];
                               if (allowedKeys.includes(e.key)) return;
@@ -173,7 +173,7 @@ export default function TestingSection({
                           <input
                             type="text"
                             inputMode="numeric"
-                            defaultValue={testing.testingTime?.min || 0}
+                            value={testing.testingTime?.min || 0}
                             onKeyDown={(e) => {
                               const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Home', 'End'];
                               if (allowedKeys.includes(e.key)) return;

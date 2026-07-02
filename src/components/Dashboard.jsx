@@ -209,7 +209,23 @@ useEffect(() => {
       onOk: async () => {
         try {
           await onDeleteAllTasks();
-          message.success("All tasks deleted successfully");
+          
+          // Clear discussion
+          if (onUpdateDiscussion) {
+            onUpdateDiscussion({ hrs: 0, min: 0, note: "" });
+          }
+          
+          // Clear MR Issue
+          if (onUpdateMrIssue) {
+            onUpdateMrIssue({ hrs: 0, min: 0, note: "" });
+          }
+          
+          // Clear testing
+          if (onUpdateTesting) {
+            onUpdateTesting({ testingTime: { hrs: 0, min: 0 } });
+          }
+
+          message.success("All tasks and times deleted successfully");
         } catch (error) {
           message.error("Failed to delete tasks");
         }

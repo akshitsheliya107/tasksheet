@@ -216,7 +216,12 @@ export function useDiscussion() {
   );
 
   const updateDiscussion = (field, value) => {
-    const updated = { ...discussion, [field]: value };
+    let updated;
+    if (typeof field === "object") {
+      updated = { ...discussion, ...field };
+    } else {
+      updated = { ...discussion, [field]: value };
+    }
     setDiscussion(updated);
     if (discussion.id) {
       debouncedUpdate(discussion.id, updated);
@@ -277,7 +282,12 @@ export function useMrIssue() {
   );
 
   const updateMrIssue = (field, value) => {
-    const updated = { ...mrIssue, [field]: value };
+    let updated;
+    if (typeof field === "object") {
+      updated = { ...mrIssue, ...field };
+    } else {
+      updated = { ...mrIssue, [field]: value };
+    }
     setMrIssue(updated);
     if (mrIssue.id) {
       debouncedUpdate(mrIssue.id, updated);
