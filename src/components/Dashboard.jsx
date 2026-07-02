@@ -264,11 +264,11 @@ useEffect(() => {
           }
           type="info"
           showIcon
-          className="rounded-xl shadow-sm border-blue-200 dark:border-blue-800/50 dark:bg-blue-900/20"
+          className="rounded-xl shadow-sm border-blue-200  dark:border-blue-800/50 dark:bg-blue-900/20"
         />
       )}
 
-      <div className="bg-[#FFFFFF] dark:bg-[#242424] backdrop-blur-md rounded-xl shadow-sm border border-gray-200 dark:border-[#333333] p-6 transition-all duration-300 hover:shadow-md">
+      <div className="bg-[#FFFFFF] dark:bg-[#242424] backdrop-blur-md rounded-xl shadow-sm border border-gray-200 dark:border-[#333333] p-6 transition-all duration-300 hover:shadow-md mt-2">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-1">
