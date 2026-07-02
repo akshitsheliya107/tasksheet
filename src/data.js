@@ -259,6 +259,9 @@ export const initialClickupConfig = {
   teamId: "",
   userId: "",
   reportName: "",
+  discussionLink: "",
+  mrIssueLink: "",
+  testingLink: "",
   listMapping: DEFAULT_CLICKUP_LIST_MAPPING,
   defaultType: "Internal Bug",          // fallback if no rule matches
   defaultStatusSource: "main_status",

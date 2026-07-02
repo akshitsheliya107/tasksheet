@@ -4,7 +4,7 @@ import {
   CheckCircle, XCircle, ExternalLink, HelpCircle, ChevronUp, ChevronDown,
   Settings as SettingsIcon, Link as LinkIcon, Key, Users, User
 } from "lucide-react";
-import { Input, Select, Switch, Button, Popconfirm, Collapse, message } from "antd";
+import { Input, Select, Switch, Button, Popconfirm, Collapse, message, Modal } from "antd";
 import toast from "react-hot-toast";
 import { clickupConfigAPI, clickupSyncAPI } from "../services/api";
 import { DEFAULT_CLICKUP_LIST_MAPPING } from "../data";
@@ -81,6 +81,8 @@ export default function ClickupSettings({ typeOptions = [] }) {
   const [config, setConfig] = useState(null);
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState(null);
+  const [testingLinks, setTestingLinks] = useState(false);
+  const [testModalVisible, setTestModalVisible] = useState(false);
   const [loadingTeams, setLoadingTeams] = useState(false);
   const [availableTeams, setAvailableTeams] = useState([]);
   const reportNameRef = useRef(null);
@@ -138,6 +140,51 @@ export default function ClickupSettings({ typeOptions = [] }) {
       toast.success("Custom fields saved");
     } catch (error) {
       toast.error("Failed to save custom fields");
+    }
+  };
+
+  const handleSaveSectionLinks = async () => {
+    try {
+      const updated = await clickupConfigAPI.update({
+        discussionLink: config.discussionLink,
+        mrIssueLink: config.mrIssueLink,
+        testingLink: config.testingLink,
+      });
+      setConfig(updated);
+      toast.success("Section links saved");
+    } catch (error) {
+      toast.error("Failed to save section links");
+    }
+  };
+
+  const handleTestLinks = async () => {
+    const extractId = (url) => {
+      if (!url) return null;
+      const pathPart = url.split('?')[0];
+      const parts = pathPart.split('/').filter(Boolean);
+      return parts.length > 0 ? parts[parts.length - 1] : null;
+    };
+    
+    const taskIds = [
+      extractId(config.discussionLink),
+      extractId(config.mrIssueLink),
+      extractId(config.testingLink)
+    ];
+    
+    if (taskIds.every(id => !id)) {
+      toast.error("No valid links provided to test");
+      return;
+    }
+    
+    setTestingLinks(true);
+    const res = await clickupSyncAPI.testLinks(taskIds);
+    setTestingLinks(false);
+    
+    if (res.success) {
+      setTestResult(res.results);
+      setTestModalVisible(true);
+    } else {
+      toast.error(res.error || "Failed to test links");
     }
   };
 
@@ -618,6 +665,73 @@ export default function ClickupSettings({ typeOptions = [] }) {
         </div>
       </div>
 
+      {/* SECTION: SPECIAL SECTION LINKS CARD */}
+      <div className="bg-white dark:bg-neutral-900 rounded-xl shadow-sm border border-gray-200 dark:border-neutral-800 p-6">
+        <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4">
+          Special Section Links (Auto-fill Time)
+        </h3>
+        
+        <div className="grid grid-cols-1 gap-6 mb-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Discussion Task Link
+            </label>
+            <Input
+              value={config.discussionLink || ""}
+              onChange={(e) => setConfig({ ...config, discussionLink: e.target.value })}
+              className="cu-input"
+              placeholder="https://app.clickup.com/t/..."
+            />
+            <span className="text-xs text-gray-500 dark:text-gray-400 mt-1 block">
+              Time logged on this task will auto-fill the Discussion section.
+            </span>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              MR Issue Task Link
+            </label>
+            <Input
+              value={config.mrIssueLink || ""}
+              onChange={(e) => setConfig({ ...config, mrIssueLink: e.target.value })}
+              className="cu-input"
+              placeholder="https://app.clickup.com/t/..."
+            />
+            <span className="text-xs text-gray-500 dark:text-gray-400 mt-1 block">
+              Time logged on this task will auto-fill the MR Issue section.
+            </span>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Testing Section Task Link
+            </label>
+            <Input
+              value={config.testingLink || ""}
+              onChange={(e) => setConfig({ ...config, testingLink: e.target.value })}
+              className="cu-input"
+              placeholder="https://app.clickup.com/t/..."
+            />
+            <span className="text-xs text-gray-500 dark:text-gray-400 mt-1 block">
+              Time logged on this task will auto-fill the Testing section.
+            </span>
+          </div>
+        </div>
+        
+        <div className="pt-4 border-t border-gray-100 dark:border-gray-700 flex gap-3">
+          <Button onClick={handleSaveSectionLinks} icon={<Save size={16} />}>
+            Save Section Links
+          </Button>
+          <Button 
+            onClick={handleTestLinks} 
+            loading={testingLinks}
+            className="border-emerald-500 text-emerald-600 hover:text-emerald-700 dark:border-emerald-600 dark:text-emerald-500"
+          >
+            Test Links
+          </Button>
+        </div>
+      </div>
+
       {/* SECTION 4: LIST MAPPING RULES CARD */}
       <div className="bg-white dark:bg-neutral-900 rounded-xl shadow-sm border border-gray-200 dark:border-neutral-800 p-6 overflow-hidden">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
@@ -804,6 +918,36 @@ export default function ClickupSettings({ typeOptions = [] }) {
           className="dark:text-white [&_.ant-collapse-header-text]:font-semibold"
         />
       </div>
+      <Modal
+        title="Link Test Results"
+        open={testModalVisible}
+        onOk={() => setTestModalVisible(false)}
+        onCancel={() => setTestModalVisible(false)}
+        footer={[
+          <Button key="ok" type="primary" onClick={() => setTestModalVisible(false)}>
+            OK
+          </Button>
+        ]}
+        width={500}
+      >
+        <div className="mt-4">
+          {testResult?.map((r, i) => (
+            <div key={i} className="mb-4 bg-gray-50 dark:bg-[#242424] p-3 rounded-lg border border-gray-200 dark:border-[#333333]">
+              <div className="font-bold text-gray-800 dark:text-gray-200 mb-1">
+                {['Discussion', 'MR Issue', 'Testing'][i]}:
+              </div>
+              {r.name === "Not Found or Invalid" ? (
+                <div className="text-red-500 font-medium">Not Found (Check Link / Token)</div>
+              ) : (
+                <div className="text-emerald-600 dark:text-emerald-400">
+                  <div className="font-medium">Name: <span className="text-gray-600 dark:text-gray-300 font-normal">{r.name}</span></div>
+                  <div className="font-medium">Status: <span className="text-gray-600 dark:text-gray-300 font-normal">{r.status}</span></div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </Modal>
     </div>
   </>
   );

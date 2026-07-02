@@ -3,7 +3,7 @@ import { Modal, DatePicker, Radio, Button, Alert } from "antd";
 import { Download, Calendar, AlertCircle, CheckCircle, XCircle, Loader } from "lucide-react";
 import dayjs from "dayjs";
 import toast from "react-hot-toast";
-import { clickupSyncAPI, tasksAPI } from "../services/api";
+import { clickupSyncAPI, tasksAPI, discussionAPI, mrIssueAPI, testingAPI } from "../services/api";
 import ConflictResolutionModal from "./ConflictResolutionModal";
 
 const fetchModalStyles = `
@@ -37,7 +37,10 @@ export default function ClickupFetchModal({
   isOpen, 
   onClose, 
   existingTasksCount, 
-  onSyncComplete 
+  onSyncComplete,
+  onUpdateDiscussion,
+  onUpdateMrIssue,
+  onUpdateTesting
 }) {
   const [selectedDate, setSelectedDate] = useState(dayjs());
   const [conflictMode, setConflictMode] = useState("merge");
@@ -101,6 +104,7 @@ export default function ClickupFetchModal({
         return;
       }
 
+      await applySpecialSections(fetchResult.specialSections);
       showSuccessAndClose(syncResult);
     } catch (err) {
       console.error(err);
@@ -123,12 +127,40 @@ export default function ClickupFetchModal({
         resolutions
       );
       
+      await applySpecialSections(fetchResult.specialSections);
       showSuccessAndClose(syncResult);
     } catch (err) {
       console.error(err);
       toast.error("Failed to apply changes");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const applySpecialSections = async (specialSections) => {
+    if (!specialSections) return;
+    
+    const { discussion, mrIssue, testing } = specialSections;
+    
+    if (discussion && (discussion.timeMs > 0 || discussion.link)) {
+      const totalMin = Math.round(discussion.timeMs / 1000 / 60);
+      const hrs = Math.floor(totalMin / 60);
+      const min = totalMin % 60;
+      if (onUpdateDiscussion) onUpdateDiscussion({ hrs, min });
+    }
+    
+    if (mrIssue && (mrIssue.timeMs > 0 || mrIssue.link)) {
+      const totalMin = Math.round(mrIssue.timeMs / 1000 / 60);
+      const hrs = Math.floor(totalMin / 60);
+      const min = totalMin % 60;
+      if (onUpdateMrIssue) onUpdateMrIssue({ hrs, min });
+    }
+    
+    if (testing && (testing.timeMs > 0 || testing.link)) {
+      const totalMin = Math.round(testing.timeMs / 1000 / 60);
+      const hrs = Math.floor(totalMin / 60);
+      const min = totalMin % 60;
+      if (onUpdateTesting) onUpdateTesting({ testingTime: { hrs, min } });
     }
   };
 

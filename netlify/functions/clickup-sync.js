@@ -518,6 +518,9 @@ export const handler = async (event) => {
     panelCustomFieldName = "Panel",
     bugTypeCustomFieldName = "Bug Type",
     defaultType = "Internal Bug",
+    discussionLink = "",
+    mrIssueLink = "",
+    testingLink = "",
   } = parseBody(event);
 
   // Validation
@@ -606,10 +609,51 @@ export const handler = async (event) => {
       grouped[taskId].entries.push(entry);
     });
 
+    // Helper to extract task ID from ClickUp URL
+    const extractTaskId = (url) => {
+      if (!url) return null;
+      // Handle URLs like https://app.clickup.com/t/2242935/86d235b79 or just /t/86d235b79
+      const pathPart = url.split('?')[0]; // Remove query params
+      const parts = pathPart.split('/').filter(Boolean); // Split and remove empty strings
+      return parts.length > 0 ? parts[parts.length - 1] : null;
+    };
+
+    const specialTaskIds = {
+      discussion: extractTaskId(discussionLink),
+      mrIssue: extractTaskId(mrIssueLink),
+      testing: extractTaskId(testingLink),
+    };
+
+    const specialSectionsData = {
+      discussion: { timeMs: 0, link: discussionLink },
+      mrIssue: { timeMs: 0, link: mrIssueLink },
+      testing: { timeMs: 0, link: testingLink },
+    };
+
     // Step 6: Build final task list with smart mapping applied
     const finalTasks = Object.values(grouped)
       .map((group) => {
-        const task = taskMap[group.taskId];
+        const taskId = group.taskId;
+
+        // Check if this task belongs to a special section
+        let isSpecial = false;
+        if (specialTaskIds.discussion === taskId) {
+          specialSectionsData.discussion.timeMs += group.totalDurationMs;
+          isSpecial = true;
+        }
+        if (specialTaskIds.mrIssue === taskId) {
+          specialSectionsData.mrIssue.timeMs += group.totalDurationMs;
+          isSpecial = true;
+        }
+        if (specialTaskIds.testing === taskId) {
+          specialSectionsData.testing.timeMs += group.totalDurationMs;
+          isSpecial = true;
+        }
+
+        // If it's a special task, exclude it from the main tasks list
+        if (isSpecial) return null;
+
+        const task = taskMap[taskId];
         if (!task) return null;
 
         // ── Raw values from API ──
@@ -711,6 +755,7 @@ export const handler = async (event) => {
     return jsonResponse(200, {
       success: true,
       tasks: finalTasks,
+      specialSections: specialSectionsData,
       count: finalTasks.length,
       date: date,
       rawTimeEntries: timeEntries.length,

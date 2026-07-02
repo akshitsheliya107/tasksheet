@@ -1026,6 +1026,9 @@ export const clickupSyncAPI = {
           panelCustomFieldName: config.panelCustomFieldName || "Panel",
           bugTypeCustomFieldName: config.bugTypeCustomFieldName || "🐞Bug Type",
           defaultType: config.defaultType || "Internal Bug",
+          discussionLink: config.discussionLink || "",
+          mrIssueLink: config.mrIssueLink || "",
+          testingLink: config.testingLink || "",
         }),
       });
 
@@ -1074,6 +1077,40 @@ export const clickupSyncAPI = {
       return data;
     } catch (error) {
       console.error("[ClickUp] Discover failed:", error);
+      return {
+        success: false,
+        error: "Network error. Make sure Netlify Functions are running.",
+      };
+    }
+  },
+
+  /**
+   * Test specific ClickUp task links to verify access.
+   */
+  async testLinks(taskIds) {
+    try {
+      const config = await clickupConfigAPI.get();
+      
+      if (!config.apiToken) {
+        return {
+          success: false,
+          error: "API Token required. Configure ClickUp Settings first.",
+        };
+      }
+
+      const response = await fetch(getFunctionUrl("clickup-test-links"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          token: config.apiToken,
+          taskIds: taskIds,
+        }),
+      });
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("[ClickUp] Test Links failed:", error);
       return {
         success: false,
         error: "Network error. Make sure Netlify Functions are running.",

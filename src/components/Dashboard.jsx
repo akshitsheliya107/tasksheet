@@ -761,6 +761,9 @@ useEffect(() => {
         onClose={() => setShowClickupModal(false)}
         existingTasksCount={tasks.filter(t => t.task && t.task.trim() !== "").length}
         onSyncComplete={onRefresh}
+        onUpdateDiscussion={onUpdateDiscussion}
+        onUpdateMrIssue={onUpdateMrIssue}
+        onUpdateTesting={onUpdateTesting}
       />
     </div>
   );
