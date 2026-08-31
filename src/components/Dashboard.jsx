@@ -459,49 +459,49 @@ useEffect(() => {
           <table className="w-full border-collapse">
             <thead>
               <tr className="bg-[#1A5336]">
-                <th className="px-4 py-4 text-left text-xs font-bold text-white uppercase tracking-wider border-r border-[#14422b] w-[100px]">
+                <th className="px-2 py-3 text-left text-[11px] font-bold text-white uppercase tracking-wider border-r border-[#14422b] w-[80px]">
                   Date
                 </th>
-                <th className="px-4 py-4 text-left text-xs font-bold text-white uppercase tracking-wider border-r border-[#14422b] w-[160px]">
+                <th className="px-2 py-3 text-left text-[11px] font-bold text-white uppercase tracking-wider border-r border-[#14422b] w-[100px]">
                   CU Link
                 </th>
-                <th className="px-4 py-4 text-left text-xs font-bold text-white uppercase tracking-wider border-r border-[#14422b] min-w-[300px]">
+                <th className="px-2 py-3 text-left text-[11px] font-bold text-white uppercase tracking-wider border-r border-[#14422b] min-w-[200px]">
                   Task / Activity
                 </th>
-                <th className="px-4 py-4 text-center text-xs font-bold text-white uppercase tracking-wider border-r border-[#14422b] w-[100px]">
+                <th className="px-2 py-3 text-center text-[11px] font-bold text-white uppercase tracking-wider border-r border-[#14422b] w-[60px]">
                   Hrs
                 </th>
-                <th className="px-4 py-4 text-center text-xs font-bold text-white uppercase tracking-wider border-r border-[#14422b] w-[100px]">
+                <th className="px-2 py-3 text-center text-[11px] font-bold text-white uppercase tracking-wider border-r border-[#14422b] w-[60px]">
                   Min
                 </th>
-                <th className="px-4 py-4 text-center text-xs font-bold text-white uppercase tracking-wider border-r border-[#14422b] w-[80px]">
+                <th className="px-2 py-3 text-center text-[11px] font-bold text-white uppercase tracking-wider border-r border-[#14422b] w-[60px]">
                   Total Min
                 </th>
-                <th className="px-4 py-4 text-center text-xs font-bold text-white uppercase tracking-wider border-r border-[#14422b] w-[80px]">
+                <th className="px-2 py-3 text-center text-[11px] font-bold text-white uppercase tracking-wider border-r border-[#14422b] w-[60px]">
                   Final Time
                 </th>
-                <th className="px-4 py-4 text-center text-xs font-bold text-white uppercase tracking-wider border-r border-[#14422b] w-[200px]">
+                <th className="px-2 py-3 text-center text-[11px] font-bold text-white uppercase tracking-wider border-r border-[#14422b] w-[130px]">
                   Type
                 </th>
-                <th className="px-4 py-4 text-center text-xs font-bold text-white uppercase tracking-wider border-r border-[#14422b] w-[200px]">
+                <th className="px-2 py-3 text-center text-[11px] font-bold text-white uppercase tracking-wider border-r border-[#14422b] w-[130px]">
                   Status
                 </th>
-                <th className="px-4 py-4 text-center text-xs font-bold text-white uppercase tracking-wider border-r border-[#14422b] w-[200px]">
+                <th className="px-2 py-3 text-center text-[11px] font-bold text-white uppercase tracking-wider border-r border-[#14422b] w-[130px]">
                   Bug Type
                 </th>
-                <th className="px-4 py-4 text-center text-xs font-bold text-white uppercase tracking-wider border-r border-[#14422b] w-[200px]">
+                <th className="px-2 py-3 text-center text-[11px] font-bold text-white uppercase tracking-wider border-r border-[#14422b] w-[130px]">
                   Reporter
                 </th>
-                <th className="px-4 py-4 text-center text-xs font-bold text-white uppercase tracking-wider border-r border-[#14422b] w-[150px]">
+                <th className="px-2 py-3 text-center text-[11px] font-bold text-white uppercase tracking-wider border-r border-[#14422b] w-[120px]">
                   Raised Time
                 </th>
-                <th className="px-4 py-4 text-center text-xs font-bold text-white uppercase tracking-wider border-r border-[#14422b] w-[60px]">
+                <th className="px-2 py-3 text-center text-[11px] font-bold text-white uppercase tracking-wider border-r border-[#14422b] w-[50px]">
                   Valid
                 </th>
-                <th className="px-4 py-4 text-center text-xs font-bold text-white uppercase tracking-wider border-r border-[#14422b] w-[60px]">
+                <th className="px-2 py-3 text-center text-[11px] font-bold text-white uppercase tracking-wider border-r border-[#14422b] w-[50px]">
                   Invalid
                 </th>
-                <th className="px-4 py-4 text-center text-xs font-bold text-white uppercase tracking-wider w-[50px]">
+                <th className="px-2 py-3 text-center text-[11px] font-bold text-white uppercase tracking-wider w-[40px]">
                   Action
                 </th>
               </tr>
