@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef,useMemo} from "react";
 import { Trash2, Plus } from "lucide-react";
 import { Select, Divider, Input, Button, Space, Modal } from "antd";
 import debounce from "lodash.debounce";
@@ -12,12 +12,18 @@ export default function TimeEntryRow({
   typeOptions = [],
   statusOptions = [],
   bugTypeOptions = [],
+  reporterOptions = [],
+  reporterTimeOptions = [],
   onAddTypeOption,
   onDeleteTypeOption,
   onAddStatusOption,
   onDeleteStatusOption,
   onAddBugTypeOption,
   onDeleteBugTypeOption,
+  onAddReporterOption,
+  onDeleteReporterOption,
+  onAddReporterTimeOption,
+  onDeleteReporterTimeOption,
 }) {
   const [localHrs, setLocalHrs] = useState(String(entry.hrs || 0));
   const [localMin, setLocalMin] = useState(String(entry.min || 0));
@@ -52,6 +58,14 @@ export default function TimeEntryRow({
       await onAddBugTypeOption(trimmedVal);
       setLocalEntry(prev => ({ ...prev, bugType: trimmedVal }));
       triggerUpdate("bugType", trimmedVal);
+    } else if (modalType === "reporter") {
+      await onAddReporterOption(trimmedVal);
+      setLocalEntry(prev => ({ ...prev, reporter: trimmedVal }));
+      triggerUpdate("reporter", trimmedVal);
+    } else if (modalType === "reporterTime") {
+      await onAddReporterTimeOption(trimmedVal);
+      setLocalEntry(prev => ({ ...prev, reporterTime: trimmedVal }));
+      triggerUpdate("reporterTime", trimmedVal);
     }
     
     setNewOptionValue("");
@@ -64,6 +78,8 @@ export default function TimeEntryRow({
       type: typeof entry.type === 'object' ? entry.type?.name : entry.type,
       status: typeof entry.status === 'object' ? entry.status?.name : entry.status,
       bugType: typeof entry.bugType === 'object' ? entry.bugType?.name : entry.bugType,
+      reporter: typeof entry.reporter === 'object' ? entry.reporter?.name : entry.reporter,
+      reporterTime: typeof entry.reporterTime === 'object' ? entry.reporterTime?.name : (entry.reporterTime || entry.reporter_time || ""),
     });
     setLocalHrs(String(entry.hrs || 0));
     setLocalMin(String(entry.min || 0));
@@ -72,6 +88,18 @@ export default function TimeEntryRow({
   const safeType = typeof localEntry.type === 'object' ? localEntry.type?.name : localEntry.type;
   const safeStatus = typeof localEntry.status === 'object' ? localEntry.status?.name : localEntry.status;
   const safeBugType = typeof localEntry.bugType === 'object' ? localEntry.bugType?.name : localEntry.bugType;
+  const safeReporter = typeof localEntry.reporter === 'object' ? localEntry.reporter?.name : localEntry.reporter;
+  const safeReporterTime = typeof localEntry.reporterTime === 'object' ? localEntry.reporterTime?.name : localEntry.reporterTime;
+
+  const combinedTimeOptions = useMemo(() => {
+    const opts = [{ id: 'today', name: 'Today' }, { id: 'yesterday', name: 'Yesterday' }];
+    for(let i = 2; i <= 5; i++) {
+       const d = new Date();
+       d.setDate(d.getDate() - i);
+       opts.push({ id: `day-${i}`, name: `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth()+1).padStart(2, '0')}` });
+    }
+    return [...opts, ...reporterTimeOptions];
+  }, [reporterTimeOptions]);
 
   const calculateTotals = (hrs, min) => {
     const h = Number(hrs) || 0;
@@ -500,6 +528,146 @@ export default function TimeEntryRow({
         )}
       </td>
 
+      <td className="px-3 py-3 border-r border-gray-200 dark:border-[#333333]">
+        {readOnly ? (
+          <span className="text-sm text-gray-600 dark:text-gray-400">{safeReporter || "-"}</span>
+        ) : (
+          <Select
+            value={safeReporter || undefined}
+            onChange={(val) => {
+              setLocalEntry({ ...localEntry, reporter: val });
+              triggerUpdate("reporter", val);
+            }}
+            placeholder="Select Reporter"
+            className="w-full"
+            size="middle"
+            allowClear
+            showSearch
+            optionLabelProp="value"
+            optionFilterProp="label"
+            options={(reporterOptions || []).map((opt) => ({
+              label: (
+                <div className="flex justify-between items-center group">
+                  <span>{opt.name || opt}</span>
+                  {opt.id && (
+                    <Trash2 
+                      size={14} 
+                      className="text-red-400 opacity-0 group-hover:opacity-100 hover:text-red-600 transition-opacity" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        Modal.confirm({
+                          title: 'Delete Option',
+                          content: `Are you sure you want to delete "${opt.name || opt}"?`,
+                          okText: 'Delete',
+                          cancelText: 'Cancel',
+                          okType: 'danger',
+                          centered: true,
+                          onOk: () => onDeleteReporterOption(opt.id)
+                        });
+                      }}
+                    />
+                  )}
+                </div>
+              ),
+              value: opt.name || opt,
+              searchLabel: opt.name || opt
+            }))}
+            filterOption={(input, option) =>
+              (option?.searchLabel ?? '').toLowerCase().includes(input.toLowerCase())
+            }
+            popupRender={(menu) => (
+              <>
+                {menu}
+                <Divider style={{ margin: '4px 0' }} />
+                <Button 
+                  type="text" 
+                  icon={<Plus size={14}/>} 
+                  className="w-full text-left flex items-center gap-2 justify-start px-3 py-1.5 hover:text-emerald-600 font-medium"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setModalType("reporter");
+                    setNewOptionValue("");
+                    setIsModalOpen(true);
+                  }}
+                >
+                  Add new reporter
+                </Button>
+              </>
+            )}
+          />
+        )}
+      </td>
+
+      <td className="px-3 py-3 border-r border-gray-200 dark:border-[#333333]">
+        {readOnly ? (
+          <span className="text-sm text-gray-600 dark:text-gray-400">{safeReporterTime || "-"}</span>
+        ) : (
+          <Select
+            value={safeReporterTime || undefined}
+            onChange={(val) => {
+              setLocalEntry({ ...localEntry, reporterTime: val });
+              triggerUpdate("reporterTime", val);
+            }}
+            placeholder="Select Time"
+            className="w-full"
+            size="middle"
+            allowClear
+            showSearch
+            optionLabelProp="value"
+            optionFilterProp="label"
+            options={(combinedTimeOptions || []).map((opt) => ({
+              label: (
+                <div className="flex justify-between items-center group">
+                  <span>{opt.name || opt}</span>
+                  {opt.id && !String(opt.id).startsWith('day-') && opt.id !== 'today' && opt.id !== 'yesterday' && (
+                    <Trash2 
+                      size={14} 
+                      className="text-red-400 opacity-0 group-hover:opacity-100 hover:text-red-600 transition-opacity" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        Modal.confirm({
+                          title: 'Delete Option',
+                          content: `Are you sure you want to delete "${opt.name || opt}"?`,
+                          okText: 'Delete',
+                          cancelText: 'Cancel',
+                          okType: 'danger',
+                          centered: true,
+                          onOk: () => onDeleteReporterTimeOption(opt.id)
+                        });
+                      }}
+                    />
+                  )}
+                </div>
+              ),
+              value: opt.name || opt,
+              searchLabel: opt.name || opt
+            }))}
+            filterOption={(input, option) =>
+              (option?.searchLabel ?? '').toLowerCase().includes(input.toLowerCase())
+            }
+            popupRender={(menu) => (
+              <>
+                {menu}
+                <Divider style={{ margin: '4px 0' }} />
+                <Button 
+                  type="text" 
+                  icon={<Plus size={14}/>} 
+                  className="w-full text-left flex items-center gap-2 justify-start px-3 py-1.5 hover:text-emerald-600 font-medium"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setModalType("reporterTime");
+                    setNewOptionValue("");
+                    setIsModalOpen(true);
+                  }}
+                >
+                  Add new day
+                </Button>
+              </>
+            )}
+          />
+        )}
+      </td>
+
       <td className="px-3 py-3 text-center border-r border-gray-200 dark:border-[#333333]">
         <label className="inline-flex items-center justify-center cursor-pointer">
           <input
@@ -573,7 +741,7 @@ export default function TimeEntryRow({
       )}
       {!readOnly && (
         <Modal
-          title={`Add New ${modalType === "type" ? "Type" : modalType === "status" ? "Status" : "Bug Type"} Option`}
+          title={`Add New ${modalType === "type" ? "Type" : modalType === "status" ? "Status" : modalType === "bugType" ? "Bug Type" : modalType === "reporter" ? "Reporter" : "Day"}`}
           open={isModalOpen}
           onOk={handleAddOption}
           onCancel={() => setIsModalOpen(false)}

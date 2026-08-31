@@ -9,6 +9,7 @@ import toast from "react-hot-toast";
 import { clickupConfigAPI, clickupSyncAPI } from "../services/api";
 import { DEFAULT_CLICKUP_LIST_MAPPING } from "../data";
 import LoadingSpinner from "./LoadingSpinner";
+import { useAuth } from "../context/AuthContext";
 
 // Dark mode style overrides for Ant Design components
 const darkModeStyles = `
@@ -77,6 +78,7 @@ const darkModeStyles = `
 `;
 
 export default function ClickupSettings({ typeOptions = [] }) {
+  const { currentUser } = useAuth();
   const [loading, setLoading] = useState(true);
   const [config, setConfig] = useState(null);
   const [testing, setTesting] = useState(false);
@@ -375,7 +377,7 @@ export default function ClickupSettings({ typeOptions = [] }) {
     }
   };
 
-  if (loading || !config) return <LoadingSpinner message="Loading ClickUp Settings..." />;
+if (loading || !config) return <LoadingSpinner message="Loading ClickUp Settings..." />;
 
   const selectOptions = typeOptions.map((opt) => ({
     label: opt.name,
@@ -394,6 +396,26 @@ export default function ClickupSettings({ typeOptions = [] }) {
           <li>Configure list mapping rules below.</li>
           <li>Test connection to verify everything is working.</li>
           <li>Go to Dashboard → "Fetch from ClickUp" to pull tasks.</li>
+          <li>
+            Example Credentials:
+            <Collapse
+              ghost
+              size="small"
+              className="mt-1 bg-gray-50 dark:bg-neutral-800/50 rounded-lg border border-gray-100 dark:border-neutral-700"
+              items={[
+                {
+                  key: '1',
+                  label: 'View Login Details',
+                  children: (
+                    <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                      <p><strong>Email:</strong> {currentUser?.email || "Not set"}</p>
+                      <p className="break-all"><strong>Password:</strong> ******** (Hidden for security)</p>
+                    </div>
+                  ),
+                }
+              ]}
+            />
+          </li>
         </ol>
       ),
     },

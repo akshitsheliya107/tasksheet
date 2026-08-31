@@ -102,7 +102,7 @@ export default function TestingSection({
 
   return (
     <tr>
-      <td colSpan={13} className="p-0 border-b border-[#333333]">
+      <td colSpan={15} className="p-0 border-b border-[#333333]">
      
 
         <div className="testing-main-collapse my-2 mx-4 rounded-xl overflow-hidden border border-gray-200 dark:border-[#333333] bg-[#F8FAFC] dark:bg-[#242424] shadow-sm">

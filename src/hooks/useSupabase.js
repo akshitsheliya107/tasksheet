@@ -33,6 +33,8 @@ const transformTask = (task) => ({
   type: task.type || "",
   status: task.status || "",
   bugType: task.bug_type !== undefined ? task.bug_type : task.bugType || "",
+  reporter: task.reporter || "",
+  reporterTime: task.reporter_time !== undefined ? task.reporter_time : task.reporterTime || "",
   isValid: task.is_valid !== undefined ? task.is_valid : task.isValid !== undefined ? task.isValid : null,
   validTime: task.valid_time !== undefined ? task.valid_time : task.validTime || 0,
   invalidTime: task.invalid_time !== undefined ? task.invalid_time : task.invalidTime || 0,
@@ -100,8 +102,7 @@ const transformTask = (task) => ({
       setTasks((prev) => prev.map((t) => {
         if (t.id !== id) return t;
         
-        // Detect if user changed any editable field (manual edit)
-        const editableFields = ['date', 'task', 'hrs', 'min', 'cuLink', 'cu_link', 'type', 'status', 'bugType', 'bug_type'];
+        const editableFields = ['date', 'task', 'hrs', 'min', 'cuLink', 'cu_link', 'type', 'status', 'bugType', 'bug_type', 'reporter', 'reporterTime', 'reporter_time'];
         let isManualEdit = false;
         
         for (const field of editableFields) {
@@ -432,20 +433,26 @@ export function useOptions() {
   const [typeOptions, setTypeOptions] = useState([]);
   const [statusOptions, setStatusOptions] = useState([]);
   const [bugTypeOptions, setBugTypeOptions] = useState([]);
+  const [reporterOptions, setReporterOptions] = useState([]);
+  const [reporterTimeOptions, setReporterTimeOptions] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const fetchOptions = useCallback(async () => {
     if (!userReady) return;
     try {
       setLoading(true);
-      const [types, statuses, bugTypes] = await Promise.all([
+      const [types, statuses, bugTypes, reporters, reporterTimes] = await Promise.all([
         optionsAPI.getTypeOptions(),
         optionsAPI.getStatusOptions(),
         optionsAPI.getBugTypeOptions(),
+        optionsAPI.getReporterOptions(),
+        optionsAPI.getReporterTimeOptions(),
       ]);
       setTypeOptions(types);
       setStatusOptions(statuses);
       setBugTypeOptions(bugTypes);
+      setReporterOptions(reporters);
+      setReporterTimeOptions(reporterTimes);
     } catch (err) {
       toast.error("Failed to load options");
     } finally {
@@ -534,6 +541,60 @@ export function useOptions() {
     }
   };
 
+  const addReporterOption = async (name) => {
+    try {
+      const newOption = await optionsAPI.addReporterOption(name);
+      setReporterOptions((prev) => [...prev, newOption]);
+    } catch (err) {
+      toast.error("Failed to add reporter option");
+    }
+  };
+
+  const updateReporterOption = async (id, name) => {
+    try {
+      await optionsAPI.updateReporterOption(id, name);
+      setReporterOptions((prev) => prev.map((opt) => (opt.id === id ? { ...opt, name } : opt)));
+    } catch (err) {
+      toast.error("Failed to update reporter option");
+    }
+  };
+
+  const deleteReporterOption = async (id) => {
+    try {
+      await optionsAPI.deleteReporterOption(id);
+      setReporterOptions((prev) => prev.filter((opt) => opt.id !== id));
+    } catch (err) {
+      toast.error("Failed to delete reporter option");
+    }
+  };
+
+  const addReporterTimeOption = async (name) => {
+    try {
+      const newOption = await optionsAPI.addReporterTimeOption(name);
+      setReporterTimeOptions((prev) => [...prev, newOption]);
+    } catch (err) {
+      toast.error("Failed to add reporter time option");
+    }
+  };
+
+  const updateReporterTimeOption = async (id, name) => {
+    try {
+      await optionsAPI.updateReporterTimeOption(id, name);
+      setReporterTimeOptions((prev) => prev.map((opt) => (opt.id === id ? { ...opt, name } : opt)));
+    } catch (err) {
+      toast.error("Failed to update reporter time option");
+    }
+  };
+
+  const deleteReporterTimeOption = async (id) => {
+    try {
+      await optionsAPI.deleteReporterTimeOption(id);
+      setReporterTimeOptions((prev) => prev.filter((opt) => opt.id !== id));
+    } catch (err) {
+      toast.error("Failed to delete reporter time option");
+    }
+  };
+
   useEffect(() => {
     if (currentUser && userReady) {
       fetchOptions();
@@ -541,6 +602,8 @@ export function useOptions() {
       setTypeOptions([]);
       setStatusOptions([]);
       setBugTypeOptions([]);
+      setReporterOptions([]);
+      setReporterTimeOptions([]);
       setLoading(false);
     }
   }, [fetchOptions, currentUser, userReady]);
@@ -549,6 +612,8 @@ export function useOptions() {
     typeOptions,
     statusOptions,
     bugTypeOptions,
+    reporterOptions,
+    reporterTimeOptions,
     loading,
     addTypeOption,
     updateTypeOption,
@@ -559,6 +624,12 @@ export function useOptions() {
     addBugTypeOption,
     updateBugTypeOption,
     deleteBugTypeOption,
+    addReporterOption,
+    updateReporterOption,
+    deleteReporterOption,
+    addReporterTimeOption,
+    updateReporterTimeOption,
+    deleteReporterTimeOption,
   };
 }
 

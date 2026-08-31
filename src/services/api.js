@@ -2,6 +2,8 @@ import {
   initialTypeOptions, 
   initialStatusOptions, 
   initialBugTypeOptions,
+  initialReporterOptions,
+  initialReporterTimeOptions,
   initialClickupConfig
 } from "../data";
 import { db } from "../lib/firebase";
@@ -158,6 +160,8 @@ export const tasksAPI = {
       type: task.type || "",
       status: task.status || "",
       bug_type: task.bug_type || task.bugType || "",
+      reporter: task.reporter || "",
+      reporter_time: task.reporter_time || task.reporterTime || "",
       is_valid: task.is_valid !== undefined 
         ? task.is_valid 
         : task.isValid !== undefined 
@@ -178,7 +182,7 @@ export const tasksAPI = {
       if (t.id !== id) return t;
       
       // Detect if any user-editable field changed (compared to current value)
-      const editableFields = ['date', 'task', 'hrs', 'min', 'cu_link', 'cuLink', 'type', 'status', 'bug_type', 'bugType'];
+      const editableFields = ['date', 'task', 'hrs', 'min', 'cu_link', 'cuLink', 'type', 'status', 'bug_type', 'bugType', 'reporter', 'reporter_time', 'reporterTime'];
       let isManualEdit = false;
       
       for (const field of editableFields) {
@@ -206,6 +210,8 @@ export const tasksAPI = {
         type: task.type !== undefined ? task.type : t.type,
         status: task.status !== undefined ? task.status : t.status,
         bug_type: task.bug_type ?? task.bugType ?? t.bug_type,
+        reporter: task.reporter !== undefined ? task.reporter : t.reporter,
+        reporter_time: task.reporter_time ?? task.reporterTime ?? t.reporter_time,
         is_valid: task.is_valid !== undefined 
           ? task.is_valid 
           : task.isValid !== undefined 
@@ -270,6 +276,8 @@ async createMultiple(tasksArr) {
     type: "",
     status: "",
     bug_type: "",
+    reporter: "",
+    reporter_time: "",
     is_valid: null,
     valid_time: 0,
     invalid_time: 0,
@@ -305,6 +313,8 @@ async createMultiple(tasksArr) {
       type: t.type || "",
       status: t.status || "",
       bug_type: t.bug_type || "",
+      reporter: t.reporter || "",
+      reporter_time: t.reporter_time || "",
       is_valid: t.is_valid !== undefined ? t.is_valid : null,
       valid_time: 0,
       invalid_time: 0,
@@ -603,6 +613,60 @@ export const optionsAPI = {
     let options = await this.getBugTypeOptions();
     options = options.filter((o) => o.id !== id);
     saveToFirestore(["options", "bugTypes"], options);
+    return true;
+  },
+
+  // REPORTER OPTIONS
+  async getReporterOptions() {
+    return await getFirestoreData(
+      ["options", "reporters"],
+      initialReporterOptions.map((name, i) => ({ id: Date.now() + i, name }))
+    );
+  },
+  async addReporterOption(name) {
+    const options = await this.getReporterOptions();
+    const newOption = { id: Date.now(), name };
+    options.push(newOption);
+    saveToFirestore(["options", "reporters"], options);
+    return newOption;
+  },
+  async updateReporterOption(id, name) {
+    let options = await this.getReporterOptions();
+    options = options.map((o) => (o.id === id ? { ...o, name } : o));
+    saveToFirestore(["options", "reporters"], options);
+    return options.find((o) => o.id === id);
+  },
+  async deleteReporterOption(id) {
+    let options = await this.getReporterOptions();
+    options = options.filter((o) => o.id !== id);
+    saveToFirestore(["options", "reporters"], options);
+    return true;
+  },
+
+  // REPORTER TIME OPTIONS
+  async getReporterTimeOptions() {
+    return await getFirestoreData(
+      ["options", "reporterTimes"],
+      initialReporterTimeOptions.map((name, i) => ({ id: Date.now() + i, name }))
+    );
+  },
+  async addReporterTimeOption(name) {
+    const options = await this.getReporterTimeOptions();
+    const newOption = { id: Date.now(), name };
+    options.push(newOption);
+    saveToFirestore(["options", "reporterTimes"], options);
+    return newOption;
+  },
+  async updateReporterTimeOption(id, name) {
+    let options = await this.getReporterTimeOptions();
+    options = options.map((o) => (o.id === id ? { ...o, name } : o));
+    saveToFirestore(["options", "reporterTimes"], options);
+    return options.find((o) => o.id === id);
+  },
+  async deleteReporterTimeOption(id) {
+    let options = await this.getReporterTimeOptions();
+    options = options.filter((o) => o.id !== id);
+    saveToFirestore(["options", "reporterTimes"], options);
     return true;
   },
 };

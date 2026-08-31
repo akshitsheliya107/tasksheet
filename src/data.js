@@ -190,6 +190,59 @@ export const initialBugTypeOptions = [
   "UI side pending work",
 ];
 
+export const initialReporterOptions = [
+  "Parth Desai",
+  "Jinal Patel",
+  "Jeel Thumar",
+  "Vishal Joshi",
+  "Pranshu Naik",
+  "Jaydip Savani",
+  "Dhruvit Vaghasiya",
+  "Nikhil Posiya",
+  "Nishant Prajapati",
+  "Kaushal Devani",
+  "Akshit Sheliya",
+  "Jatin Sojitra",
+  "Chirag Radadiya",
+  "Ravi Vaghamashi",
+  "Aditya Singh",
+  "Jinal Gujarati",
+  "Drashti Mendapara",
+  "Jensi Sojitra",
+  "Matix Rami",
+  "Piyush Ramani",
+  "Amruta Umale",
+  "Yash Chahodiya",
+  "Yash Savsaviya",
+  "Isha Gondaliya",
+  "Nidhi Kanthariya",
+  "Bansari Shukla",
+  "Shreya Saliya",
+  "Prashil Dhameliya",
+  "Juzer Hazoori",
+  "Prashant Pipaliya",
+  "Shishir Namdev",
+  "Kishan Savani",
+  "Parthil Dhorajiya",
+  "Sujal Prajapat",
+  "Nayan Gabani",
+  "Milan Golakiya",
+  "Daya Desai",
+  "Dipesh Jadav",
+  "Karan Bhutwala",
+  "Manthan Sachapara",
+  "Sonika Virani",
+  "Ritesh Solanki",
+  "Mansi Senjaliya",
+  "Jaydeep Khachariya",
+  "Mitul Jasani",
+  "Jatin Thummar",
+  "Bhautik Makwana",
+  "Khyati Unadkat"
+];
+
+export const initialReporterTimeOptions = [];
+
 // ════════════════════════════════════════════════════════════
 // CLICKUP INTEGRATION CONFIG
 // ════════════════════════════════════════════════════════════

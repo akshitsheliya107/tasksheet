@@ -134,12 +134,18 @@ useEffect(() => {
     typeOptions,
     statusOptions,
     bugTypeOptions,
+    reporterOptions,
+    reporterTimeOptions,
     addTypeOption,
     deleteTypeOption,
     addStatusOption,
     deleteStatusOption,
     addBugTypeOption,
     deleteBugTypeOption,
+    addReporterOption,
+    deleteReporterOption,
+    addReporterTimeOption,
+    deleteReporterTimeOption,
     loading: optionsLoading
   } = useOptions();
 
@@ -291,12 +297,18 @@ useEffect(() => {
             typeOptions={typeOptions}
             statusOptions={statusOptions}
             bugTypeOptions={bugTypeOptions}
+            reporterOptions={reporterOptions}
+            reporterTimeOptions={reporterTimeOptions}
             onAddTypeOption={addTypeOption}
             onDeleteTypeOption={deleteTypeOption}
             onAddStatusOption={addStatusOption}
             onDeleteStatusOption={deleteStatusOption}
             onAddBugTypeOption={addBugTypeOption}
             onDeleteBugTypeOption={deleteBugTypeOption}
+            onAddReporterOption={addReporterOption}
+            onDeleteReporterOption={deleteReporterOption}
+            onAddReporterTimeOption={addReporterTimeOption}
+            onDeleteReporterTimeOption={deleteReporterTimeOption}
             onCreateTask={createTask}
             onCreateDefaultTasks={createDefaultTasks}
             onUpdateTask={updateTask}

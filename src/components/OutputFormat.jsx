@@ -210,10 +210,17 @@ export default function OutputFormat({ tasks = [], testing = {}, discussion = {}
           const desc = extractDescription(t.task).replace(/\n/g, " ");
 
           let taskText = "";
+          let reporterSuffix = "";
+          if (t.reporter) {
+            const rTime = t.reporter_time || t.reporterTime;
+            const timeStr = rTime ? ` **${rTime}**` : "";
+            reporterSuffix = ` (Raised by **${t.reporter}**${timeStr})`;
+          }
+          
           if (catName === "NF") {
-            taskText = `**[${bugType}]** => [${cuLink || "-"}] => ${desc} => **[${status}]** => Time Spent: ${minDisplay} = ${hrDecimal}`;
+            taskText = `**[${bugType}]** => [${cuLink || "-"}] => ${desc} => **[${status}]** => Time Spent: ${minDisplay} = ${hrDecimal}${reporterSuffix}`;
           } else {
-            taskText = `**[${bugType}]** => ${cuLink || "-"} => ${desc} => **[${status}]** => Time Spent: ${minDisplay} = ${hrDecimal}`;
+            taskText = `**[${bugType}]** => ${cuLink || "-"} => ${desc} => **[${status}]** => Time Spent: ${minDisplay} = ${hrDecimal}${reporterSuffix}`;
           }
 
           blocks.push({

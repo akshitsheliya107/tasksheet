@@ -29,15 +29,21 @@ export default function Dashboard({
   mrIssue,
   testing,
   typeOptions,
-    isLoading = false, 
+  isLoading = false, 
   statusOptions,
   bugTypeOptions,
+  reporterOptions,
+  reporterTimeOptions,
   onAddTypeOption,
   onDeleteTypeOption,
   onAddStatusOption,
   onDeleteStatusOption,
   onAddBugTypeOption,
   onDeleteBugTypeOption,
+  onAddReporterOption,
+  onDeleteReporterOption,
+  onAddReporterTimeOption,
+  onDeleteReporterTimeOption,
   onCreateTask,
   onCreateDefaultTasks,
   onUpdateTask,
@@ -483,6 +489,12 @@ useEffect(() => {
                 <th className="px-4 py-4 text-center text-xs font-bold text-white uppercase tracking-wider border-r border-[#14422b] w-[200px]">
                   Bug Type
                 </th>
+                <th className="px-4 py-4 text-center text-xs font-bold text-white uppercase tracking-wider border-r border-[#14422b] w-[200px]">
+                  Reporter
+                </th>
+                <th className="px-4 py-4 text-center text-xs font-bold text-white uppercase tracking-wider border-r border-[#14422b] w-[150px]">
+                  Raised Time
+                </th>
                 <th className="px-4 py-4 text-center text-xs font-bold text-white uppercase tracking-wider border-r border-[#14422b] w-[60px]">
                   Valid
                 </th>
@@ -505,18 +517,24 @@ useEffect(() => {
                   typeOptions={typeOptions}
                   statusOptions={statusOptions}
                   bugTypeOptions={bugTypeOptions}
+                  reporterOptions={reporterOptions}
+                  reporterTimeOptions={reporterTimeOptions}
                   onAddTypeOption={onAddTypeOption}
                   onDeleteTypeOption={onDeleteTypeOption}
                   onAddStatusOption={onAddStatusOption}
                   onDeleteStatusOption={onDeleteStatusOption}
                   onAddBugTypeOption={onAddBugTypeOption}
                   onDeleteBugTypeOption={onDeleteBugTypeOption}
+                  onAddReporterOption={onAddReporterOption}
+                  onDeleteReporterOption={onDeleteReporterOption}
+                  onAddReporterTimeOption={onAddReporterTimeOption}
+                  onDeleteReporterTimeOption={onDeleteReporterTimeOption}
                   cuLink={entry.cuLink}
                 />
               ))}
 
               <tr>
-                <td colSpan={13} className="p-0 border-b border-[#333333]">
+                <td colSpan={15} className="p-0 border-b border-[#333333]">
                   <style>
                     {`
                       .dashboard-collapse .ant-collapse {
@@ -627,7 +645,7 @@ useEffect(() => {
               </tr>
 
               <tr>
-                <td colSpan={13} className="p-0 border-b border-gray-200 dark:border-[#333333]">
+                <td colSpan={15} className="p-0 border-b border-gray-200 dark:border-[#333333]">
                   <div className="dashboard-collapse my-2 mx-4 rounded-xl overflow-hidden border border-gray-200 dark:border-[#333333] bg-white dark:bg-[#242424] shadow-sm">
                     <Collapse
                       activeKey={showMrIssue ? ["mr-issue"] : []}
@@ -714,7 +732,7 @@ useEffect(() => {
 
               <tr className="bg-gray-900 dark:bg-[#0F0F0F]">
                 <td
-                  colSpan={4}
+                  colSpan={5}
                   className="px-5 py-4 text-right border-r border-gray-700 dark:border-[#333333]"
                 >
                   <span className="text-lg font-bold text-white">
@@ -731,7 +749,7 @@ useEffect(() => {
                     {grandTotalTime}
                   </span>
                 </td>
-                <td colSpan={3} className="border-r border-gray-700 dark:border-[#333333]"></td>
+                <td colSpan={5} className="border-r border-gray-700 dark:border-[#333333]"></td>
                 <td className="px-4 py-4 text-center border-r border-gray-700 dark:border-[#333333]">
                   <span className="text-lg font-bold text-emerald-400">
                     {tasksStats.validTime.toFixed(2)}
