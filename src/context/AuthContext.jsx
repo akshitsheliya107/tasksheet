@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { 
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword, 
+  sendPasswordResetEmail,
   signOut, 
   onAuthStateChanged 
 } from "firebase/auth";
@@ -25,6 +26,10 @@ export function AuthProvider({ children }) {
 
   function login(email, password) {
     return signInWithEmailAndPassword(auth, email, password);
+  }
+
+  function resetPassword(email) {
+    return sendPasswordResetEmail(auth, email);
   }
 
   async function logout() {
@@ -62,6 +67,7 @@ export function AuthProvider({ children }) {
     userReady,  // ✅ Export ye bhi
     login, 
     signup, 
+    resetPassword,
     logout 
   };
 

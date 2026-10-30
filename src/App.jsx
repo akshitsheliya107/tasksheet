@@ -12,6 +12,7 @@ import ClickupSettings from "./components/ClickupSettings";
 import ClickupDiscovery from "./components/ClickupDiscovery";
 import Login from "./components/auth/Login";
 import Signup from "./components/auth/Signup";
+import AdminConsole from "./components/auth/AdminConsole";
 import { useAuth } from "./context/AuthContext";
 
 import LoadingSpinner from "./components/LoadingSpinner";
@@ -25,7 +26,7 @@ import {
 } from "./hooks/useSupabase";
 import { workspaceAPI, setUserId } from "./services/api";
 
-function App() {
+function WorkspaceApp() {
   const { currentUser, logout } = useAuth();
   const [authView, setAuthView] = useState("login");
 
@@ -447,6 +448,13 @@ useEffect(() => {
       </div>
     </ConfigProvider>
   );
+}
+
+function App() {
+  if (window.location.pathname.replace(/\/+$/, "") === "/admin") {
+    return <AdminConsole />;
+  }
+  return <WorkspaceApp />;
 }
 
 export default App;

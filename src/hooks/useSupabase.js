@@ -220,7 +220,7 @@ export function useDiscussion() {
     let updated;
     if (typeof field === "object") {
       updated = { ...discussion, ...field };
-    } else {
+    } else { 
       updated = { ...discussion, [field]: value };
     }
     setDiscussion(updated);
@@ -230,7 +230,7 @@ export function useDiscussion() {
   };
 
   useEffect(() => {
-    if (currentUser && userReady) {
+    if (currentUser && userReady) { 
       fetchDiscussion();
     } else if (!currentUser) {
       setDiscussion({ id: null, hrs: 0, min: 0, note: "" });
