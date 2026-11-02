@@ -28,6 +28,10 @@ function getAdminAuth() {
     throw new Error("FIREBASE_ADMIN_SERVICE_ACCOUNT must be valid JSON");
   }
 
+  if (serviceAccount.private_key) {
+    serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, "\n");
+  }
+
   if (serviceAccount.project_id !== PROJECT_ID) {
     throw new Error("Firebase Admin credentials are for the wrong project");
   }
@@ -91,11 +95,63 @@ export const handler = async (event) => {
         users: page.users.map((user) => ({
           uid: user.uid,
           email: user.email || "",
+          displayName: user.displayName || "",
           createdAt: user.metadata.creationTime || null,
           lastSignInTime: user.metadata.lastSignInTime || null,
         })),
         nextPageToken: page.pageToken || null,
       });
+    }
+
+    if (request.action === "createUser") {
+      const { email, password, displayName } = request;
+      if (typeof email !== "string" || !email.trim() || typeof password !== "string") {
+        return jsonResponse(400, { error: "Email and password are required." });
+      }
+      if (password.length < 6 || password.length > 128) {
+        return jsonResponse(400, { error: "Password must be at least 6 characters." });
+      }
+
+      const createParams = {
+        email: email.trim(),
+        password,
+      };
+      if (typeof displayName === "string" && displayName.trim()) {
+        createParams.displayName = displayName.trim();
+      }
+
+      const newUser = await auth.createUser(createParams);
+
+      console.info("Admin created new user:", newUser.uid, newUser.email);
+      return jsonResponse(200, {
+        success: true,
+        user: {
+          uid: newUser.uid,
+          email: newUser.email || "",
+          displayName: newUser.displayName || "",
+          createdAt: newUser.metadata.creationTime || null,
+          lastSignInTime: null,
+        },
+      });
+    }
+
+    if (request.action === "deleteUser") {
+      const { uid } = request;
+      if (typeof uid !== "string" || !uid) {
+        return jsonResponse(400, { error: "User ID is required." });
+      }
+      if (uid === adminUid) {
+        return jsonResponse(400, { error: "You cannot delete your own admin account." });
+      }
+
+      const targetUser = await auth.getUser(uid);
+      if (targetUser.customClaims?.admin === true) {
+        return jsonResponse(400, { error: "Admin accounts cannot be deleted from this panel." });
+      }
+
+      await auth.deleteUser(uid);
+      console.info("Admin permanently deleted user:", uid);
+      return jsonResponse(200, { success: true });
     }
 
     if (request.action === "setTemporaryPassword") {
@@ -134,12 +190,18 @@ export const handler = async (event) => {
     return jsonResponse(400, { error: "Unknown admin action" });
   } catch (error) {
     console.error("Admin user operation failed:", error.code || error.message);
+    if (error.code === "auth/email-already-exists") {
+      return jsonResponse(400, { error: "This email is already in use by another account." });
+    }
+    if (error.code === "auth/invalid-email") {
+      return jsonResponse(400, { error: "Invalid email format." });
+    }
     if (error.code === "auth/user-not-found") {
       return jsonResponse(404, { error: "User account was not found." });
     }
     if (error.code === "auth/invalid-password") {
       return jsonResponse(400, { error: "Firebase rejected this password. Use a stronger password." });
     }
-    return jsonResponse(500, { error: "Could not complete the admin request." });
+    return jsonResponse(500, { error: error.message || "Could not complete the admin request." });
   }
 };
